@@ -4,24 +4,31 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "dev": "nodemon",
+    "build": "tsc",
+    "start": "node dist/app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^17.0.1",
     "express": "^5.1.0",
-    "mongoose": "^8.16.1",
+    "http-proxy-middleware": "^3.0.5",
     "jsonwebtoken": "^9.0.0",
-    "bcryptjs": "^2.4.3"
+    "mongoose": "^8.16.1"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
-    "@types/node": "^24.0.10",
     "@types/jsonwebtoken": "^9.0.2",
+    "@types/node": "^24.0.10",
+    "nodemon": "^3.1.10",
+    "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.8.3"
   }

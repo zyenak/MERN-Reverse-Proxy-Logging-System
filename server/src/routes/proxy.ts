@@ -13,9 +13,6 @@ router.use(
     target: 'https://jsonplaceholder.typicode.com',
     changeOrigin: true,
     pathRewrite: { '^/': '/users' },
-    onProxyReq: (proxyReq, req, res) => {
-      // Optionally add custom headers or logging here
-    },
   })
 );
 

@@ -3,15 +3,21 @@ import Log from '../models/Log';
 import ProxyRule from '../models/ProxyRule';
 import { AuthRequest } from './auth';
 
-export const logRequest = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const logRequest = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const start = Date.now();
   const method = req.method;
   const url = req.originalUrl;
 
   // Check proxy rules
   const rule = await ProxyRule.findOne();
-  if (!rule || !rule.enabled) return next();
-  if (rule.whitelist.length > 0 && !rule.whitelist.some((path) => url.startsWith(path))) return next();
+  if (!rule || !rule.enabled) {
+    next();
+    return;
+  }
+  if (rule.whitelist.length > 0 && !rule.whitelist.some((path) => url.startsWith(path))) {
+    next();
+    return;
+  }
 
   res.on('finish', async () => {
     const responseTime = Date.now() - start;

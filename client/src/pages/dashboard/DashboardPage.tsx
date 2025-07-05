@@ -64,6 +64,7 @@ export default function DashboardPage() {
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
   const [proxyStatus, setProxyStatus] = useState<any>(null);
+  const [usersLoading, setUsersLoading] = useState(false);
 
   const fetchDashboardStats = async () => {
     try {
@@ -116,10 +117,23 @@ export default function DashboardPage() {
     setLoading(true);
     await Promise.all([
       fetchDashboardStats(),
-      fetchUserData(),
       fetchProxyStatus()
     ]);
     setLoading(false);
+  };
+
+  const simulateExternalRequest = async () => {
+    setUsersLoading(true);
+    try {
+      const data = await apiClient.post<UserData[]>('/proxy/users/simulate');
+      setUsers(data);
+      toast.success('External request simulated and logged!');
+    } catch (error) {
+      setUsers([]);
+      toast.error('Failed to fetch user data from external API.');
+    } finally {
+      setUsersLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -305,35 +319,45 @@ export default function DashboardPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {users.length > 0 ? (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>ID</TableHead>
-                          <TableHead>Name</TableHead>
-                          <TableHead>Username</TableHead>
-                          <TableHead>Email</TableHead>
-                          <TableHead>Company</TableHead>
-                          <TableHead>City</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {users.map((user) => (
-                          <TableRow key={user.id}>
-                            <TableCell className="font-medium">{user.id}</TableCell>
-                            <TableCell>{user.name}</TableCell>
-                            <TableCell>{user.username}</TableCell>
-                            <TableCell>{user.email}</TableCell>
-                            <TableCell>{user.company.name}</TableCell>
-                            <TableCell>{user.address.city}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  ) : (
-                    <div className="text-center py-8 text-muted-foreground">
-                      No user data available. The proxy service may be offline.
+                  <Button onClick={simulateExternalRequest} variant="outline" className="mb-4">
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Simulate External Request
+                  </Button>
+                  {usersLoading ? (
+                    <div className="flex items-center justify-center h-32">
+                      <RefreshCw className="h-8 w-8 animate-spin" />
                     </div>
+                  ) : (
+                    users.length > 0 ? (
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>ID</TableHead>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Username</TableHead>
+                            <TableHead>Email</TableHead>
+                            <TableHead>Company</TableHead>
+                            <TableHead>City</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {users.map((user) => (
+                            <TableRow key={user.id}>
+                              <TableCell className="font-medium">{user.id}</TableCell>
+                              <TableCell>{user.name}</TableCell>
+                              <TableCell>{user.username}</TableCell>
+                              <TableCell>{user.email}</TableCell>
+                              <TableCell>{user.company.name}</TableCell>
+                              <TableCell>{user.address.city}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        No user data available. The proxy service may be offline.
+                      </div>
+                    )
                   )}
                 </CardContent>
               </Card>

@@ -6,7 +6,7 @@ import asyncHandler from '@/utils/asyncHandler';
 
 const router = Router();
 
-router.post('/register', validateRequest(createUserSchema), asyncHandler(register));
+// router.post('/register', validateRequest(createUserSchema), asyncHandler(register)); // Removed registration
 router.post('/login', validateRequest(loginSchema), asyncHandler(login));
 
 export default router; 

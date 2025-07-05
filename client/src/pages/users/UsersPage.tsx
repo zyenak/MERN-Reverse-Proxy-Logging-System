@@ -33,7 +33,6 @@ interface User {
   isActive: boolean;
   createdAt: string;
   lastLogin?: string;
-  loginCount: number;
 }
 
 interface CreateUserData {
@@ -41,6 +40,7 @@ interface CreateUserData {
   email: string;
   password: string;
   role: 'admin' | 'user';
+  isActive?: boolean;
 }
 
 export default function UsersPage() {
@@ -48,7 +48,6 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
   const [formData, setFormData] = useState<CreateUserData>({
     username: '',
     email: '',
@@ -72,7 +71,18 @@ export default function UsersPage() {
   };
 
   const createUser = async () => {
+    if (
+      !formData.username ||
+      !formData.email ||
+      !formData.password ||
+      formData.password.length < 8 ||
+      !/\S+@\S+\.\S+/.test(formData.email)
+    ) {
+      toast.error('Please fill all fields with valid values (password ≥ 8 chars, valid email).');
+      return;
+    }
     try {
+      console.log('Creating user with:', formData);
       await apiClient.post('/users', formData);
       toast.success('User created successfully');
       setIsCreateDialogOpen(false);
@@ -80,7 +90,9 @@ export default function UsersPage() {
       fetchUsers();
     } catch (error: any) {
       console.error('Error creating user:', error);
-      toast.error(error.message || 'Failed to create user');
+      // Show backend error message if available
+      const backendMsg = error?.response?.data?.message;
+      toast.error(backendMsg || error.message || 'Failed to create user');
     }
   };
 
@@ -111,7 +123,14 @@ export default function UsersPage() {
   };
 
   const toggleUserStatus = async (userId: string, isActive: boolean) => {
-    await updateUser(userId, { isActive });
+    try {
+      await apiClient.patch(`/users/${userId}/status`, { isActive });
+      fetchUsers();
+    } catch (error: any) {
+      console.error('Error toggling user status:', error);
+      const backendMsg = error?.response?.data?.message;
+      toast.error(backendMsg || error.message || 'Failed to update user status');
+    }
   };
 
   const resetForm = () => {
@@ -121,41 +140,6 @@ export default function UsersPage() {
       password: '',
       role: 'user'
     });
-  };
-
-  const openEditDialog = (user: User) => {
-    setEditingUser(user);
-    setFormData({
-      username: user.username,
-      email: user.email,
-      password: '',
-      role: user.role
-    });
-  };
-
-  const saveEdit = async () => {
-    if (!editingUser) return;
-
-    try {
-      const updates: any = {
-        username: formData.username,
-        email: formData.email,
-        role: formData.role
-      };
-
-      if (formData.password) {
-        updates.password = formData.password;
-      }
-
-      await apiClient.put(`/users/${editingUser._id}`, updates);
-      toast.success('User updated successfully');
-      setEditingUser(null);
-      resetForm();
-      fetchUsers();
-    } catch (error: any) {
-      console.error('Error updating user:', error);
-      toast.error(error.message || 'Failed to update user');
-    }
   };
 
   useEffect(() => {
@@ -246,6 +230,14 @@ export default function UsersPage() {
                   </SelectContent>
                 </Select>
               </div>
+              <div>
+                <Label htmlFor="isActive" className="mb-2">Active</Label>
+                <Switch
+                  id="isActive"
+                  checked={formData.isActive}
+                  onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
+                />
+              </div>
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                   Cancel
@@ -293,9 +285,9 @@ export default function UsersPage() {
                 <TableHead>User</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Last Login</TableHead>
-                <TableHead>Login Count</TableHead>
+                <TableHead>Email</TableHead>
                 <TableHead>Created</TableHead>
+                <TableHead>Last Login</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -339,17 +331,9 @@ export default function UsersPage() {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
-                      <Calendar className="h-3 w-3" />
-                      {user.lastLogin 
-                        ? new Date(user.lastLogin).toLocaleDateString()
-                        : 'Never'
-                      }
+                      <Mail className="h-3 w-3" />
+                      {user.email}
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">
-                      {user.loginCount} logins
-                    </Badge>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
@@ -358,14 +342,16 @@ export default function UsersPage() {
                     </div>
                   </TableCell>
                   <TableCell>
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      {user.lastLogin 
+                        ? new Date(user.lastLogin).toLocaleDateString()
+                        : 'Never'
+                      }
+                    </div>
+                  </TableCell>
+                  <TableCell>
                     <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openEditDialog(user)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
                       <Button
                         variant="ghost"
                         size="sm"
@@ -381,68 +367,6 @@ export default function UsersPage() {
           </Table>
         </CardContent>
       </Card>
-
-      {/* Edit Dialog */}
-      <Dialog open={!!editingUser} onOpenChange={() => setEditingUser(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit User</DialogTitle>
-            <DialogDescription>
-              Update user information and permissions
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="edit-username" className="mb-2">Username</Label>
-              <Input
-                id="edit-username"
-                value={formData.username}
-                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label htmlFor="edit-email" className="mb-2">Email</Label>
-              <Input
-                id="edit-email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label htmlFor="edit-password" className="mb-2">New Password (leave blank to keep current)</Label>
-              <Input
-                id="edit-password"
-                type="password"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                placeholder="Enter new password"
-              />
-            </div>
-            <div>
-              <Label htmlFor="edit-role" className="mb-2">Role</Label>
-              <Select
-                value={formData.role}
-                onValueChange={(value: 'admin' | 'user') => setFormData({ ...formData, role: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="user">User</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setEditingUser(null)}>
-                Cancel
-              </Button>
-              <Button onClick={saveEdit}>Save Changes</Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 } 

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import User from '@/models/User';
 import logger from '@/utils/logger';
+import bcrypt from 'bcryptjs';
 
 export const getUsers = async (req: Request, res: Response) => {
   try {
@@ -46,5 +47,68 @@ export const getExternalUsers = async (req: Request, res: Response) => {
   } catch (error) {
     logger.error('Error fetching external users:', error);
     res.status(500).json({ message: 'Error fetching external users', error });
+  }
+}; 
+
+export const createUser = async (req: Request, res: Response) => {
+  try {
+    const { username, email, password, role = 'user', isActive = true } = req.body;
+    if (!username || !email || !password) {
+      return res.status(400).json({ message: 'Username, email, and password are required.' });
+    }
+    const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+    if (existingUser) {
+      return res.status(409).json({ message: 'Username or email already exists.' });
+    }
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = new User({
+      username,
+      email,
+      password: hashedPassword,
+      role,
+      isActive,
+      createdAt: new Date(),
+    });
+    await user.save();
+    res.status(201).json({
+      _id: user._id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      isActive: user.isActive,
+      createdAt: user.createdAt,
+      lastLogin: user.lastLogin,
+    });
+  } catch (error) {
+    logger.error('Error creating user:', error);
+    res.status(500).json({ message: 'Error creating user', error });
+  }
+}; 
+
+export const updateUserStatus = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { isActive } = req.body;
+    if (typeof isActive !== 'boolean') {
+      return res.status(400).json({ message: 'isActive must be a boolean.' });
+    }
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+    user.isActive = isActive;
+    await user.save();
+    res.json({
+      _id: user._id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      isActive: user.isActive,
+      createdAt: user.createdAt,
+      lastLogin: user.lastLogin,
+    });
+  } catch (error) {
+    logger.error('Error updating user status:', error);
+    res.status(500).json({ message: 'Error updating user status', error });
   }
 }; 

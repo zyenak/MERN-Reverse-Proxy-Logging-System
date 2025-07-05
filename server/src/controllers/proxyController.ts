@@ -72,6 +72,7 @@ export const handleProxy = async (req: AuthRequest, res: Response): Promise<void
           timestamp: new Date(),
           status: response.status,
           user: req.user?.username,
+          requestedBy: req.user?.id || req.user?._id || req.user?.username,
           responseTime,
           proxyRuleId: matchingRule?._id,
           targetUrl,
@@ -132,6 +133,7 @@ export const handleProxy = async (req: AuthRequest, res: Response): Promise<void
         timestamp: new Date(),
         status: 500,
         user: req.user?.username,
+        requestedBy: req.user?.id || req.user?._id || req.user?.username,
         responseTime,
         isProxied: true,
         targetUrl,
@@ -149,6 +151,50 @@ export const handleProxy = async (req: AuthRequest, res: Response): Promise<void
       error: error instanceof Error ? error.message : 'Unknown error',
       timestamp: new Date().toISOString()
     });
+  }
+};
+
+export const simulateExternalUserRequest = async (req: AuthRequest, res: Response) => {
+  const startTime = Date.now();
+  const originalUrl = req.originalUrl;
+  const method = 'GET';
+  const targetUrl = `${TARGET_API}/users`;
+  try {
+    const response = await axios.get(targetUrl, { timeout: 30000 });
+    const responseTime = Date.now() - startTime;
+    // Log the request
+    try {
+      await Log.create({
+        method,
+        url: originalUrl,
+        timestamp: new Date(),
+        status: response.status,
+        user: req.user?.username,
+        requestedBy: req.user?.id || req.user?._id || req.user?.username,
+        responseTime,
+        targetUrl,
+        isProxied: true,
+        meta: {
+          targetApi: TARGET_API,
+          userAgent: req.headers['user-agent'],
+          ip: req.ip,
+          simulation: true
+        }
+      });
+    } catch (logError) {
+      logger.error('Error logging simulated proxy request:', logError);
+    }
+    res.status(response.status).json(response.data);
+  } catch (error) {
+    const responseTime = Date.now() - startTime;
+    logger.error('Simulated proxy request failed', {
+      url: originalUrl,
+      method,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      responseTime,
+      user: req.user?.username
+    });
+    res.status(500).json({ message: 'Simulated proxy request failed', error: error instanceof Error ? error.message : 'Unknown error' });
   }
 };
 

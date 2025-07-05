@@ -10,6 +10,7 @@ import LogsPage from '@/pages/logs/LogsPage';
 import ProxyRulesPage from '@/pages/proxy-rules/ProxyRulesPage';
 import UsersPage from '@/pages/users/UsersPage';
 import SettingsPage from '@/pages/settings/SettingsPage';
+import UserDashboardPage from '@/pages/dashboard/UserDashboardPage';
 
 // Admin Route Wrapper Component
 const AdminRouteWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -63,6 +64,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
 
 const AppRoutes: React.FC = () => {
+  const { isAdmin } = useAuth();
   return (
     <Routes>
       {/* Public Routes */}
@@ -84,14 +86,17 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       >
-        <Route index element={<DashboardPage />} />
+        <Route index element={isAdmin ? <DashboardPage /> : <UserDashboardPage />} />
       </Route>
 
+      {/* Admin-only routes */}
       <Route
         path="/logs"
         element={
           <ProtectedRoute>
-            <MainLayout />
+            <AdminRouteWrapper>
+              <MainLayout />
+            </AdminRouteWrapper>
           </ProtectedRoute>
         }
       >
@@ -102,7 +107,9 @@ const AppRoutes: React.FC = () => {
         path="/settings"
         element={
           <ProtectedRoute>
-            <MainLayout />
+            <AdminRouteWrapper>
+              <MainLayout />
+            </AdminRouteWrapper>
           </ProtectedRoute>
         }
       >
@@ -113,22 +120,26 @@ const AppRoutes: React.FC = () => {
         path="/proxy-rules"
         element={
           <ProtectedRoute>
-            <MainLayout />
+            <AdminRouteWrapper>
+              <MainLayout />
+            </AdminRouteWrapper>
           </ProtectedRoute>
         }
       >
-        <Route index element={<AdminRouteWrapper><ProxyRulesPage /></AdminRouteWrapper>} />
+        <Route index element={<ProxyRulesPage />} />
       </Route>
 
       <Route
         path="/users"
         element={
           <ProtectedRoute>
-            <MainLayout />
+            <AdminRouteWrapper>
+              <MainLayout />
+            </AdminRouteWrapper>
           </ProtectedRoute>
         }
       >
-        <Route index element={<AdminRouteWrapper><UsersPage /></AdminRouteWrapper>} />
+        <Route index element={<UsersPage />} />
       </Route>
 
       {/* Catch all route */}

@@ -9,7 +9,7 @@ import { CreateUserInput, LoginInput } from '@/utils/validation';
 
 export const register = async (req: Request, res: Response) => {
   try {
-    const { username, password, role }: CreateUserInput = req.body;
+    let { username, password, role }: CreateUserInput = req.body;
     
     const existingUser = await User.findOne({ username });
     if (existingUser) {
@@ -18,6 +18,8 @@ export const register = async (req: Request, res: Response) => {
     }
     
     const hashedPassword = await bcrypt.hash(password, 10);
+    // Default to 'user' if role is not provided
+    if (!role) role = 'user';
     const user = new User({ username, password: hashedPassword, role });
     await user.save();
     

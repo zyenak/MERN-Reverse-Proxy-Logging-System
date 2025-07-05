@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authenticate } from '@/middleware/auth';
-import { handleProxy, getProxyStatus } from '@/controllers/proxyController';
+import { handleProxy, getProxyStatus, simulateExternalUserRequest } from '@/controllers/proxyController';
 
 const router = Router();
 
@@ -13,5 +13,6 @@ router.post('/:path', authenticate, handleProxy);
 router.put('/:path', authenticate, handleProxy);
 router.delete('/:path', authenticate, handleProxy);
 router.patch('/:path', authenticate, handleProxy);
+router.post('/users/simulate', authenticate, simulateExternalUserRequest);
 
 export default router; 

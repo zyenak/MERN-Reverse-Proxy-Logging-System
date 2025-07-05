@@ -15,10 +15,10 @@ import asyncHandler from '@/utils/asyncHandler';
 const router = Router();
 
 // Get all proxy rules
-router.get('/', authenticate as RequestHandler, asyncHandler(getAllProxyRules));
+router.get('/', authenticate as RequestHandler, requireRole(['admin']) as RequestHandler, asyncHandler(getAllProxyRules));
 
 // Get specific proxy rule
-router.get('/:id', authenticate as RequestHandler, asyncHandler(getProxyRuleById));
+router.get('/:id', authenticate as RequestHandler, requireRole(['admin']) as RequestHandler, asyncHandler(getProxyRuleById));
 
 // Create new proxy rule (admin only)
 router.post('/', 

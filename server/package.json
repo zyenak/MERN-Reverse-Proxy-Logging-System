@@ -7,7 +7,7 @@
     "dev": "nodemon",
     "build": "tsc",
     "start": "node dist/app.js",
-    "create-admin": "ts-node src/scripts/createAdmin.ts",
+    "create-mock-users": "ts-node src/scripts/createMockUsers.ts",
     "migrate": "ts-node src/scripts/migrateDatabase.ts",
     "test": "jest",
     "test:watch": "jest --watch",

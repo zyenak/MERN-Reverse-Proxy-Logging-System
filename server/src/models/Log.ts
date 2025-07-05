@@ -11,6 +11,7 @@ export interface ILog extends Document {
   targetUrl?: string;
   isProxied: boolean;
   meta?: Record<string, any>;
+  requestedBy?: string; // user id or username
 }
 
 const LogSchema = new Schema<ILog>({
@@ -24,6 +25,7 @@ const LogSchema = new Schema<ILog>({
   targetUrl: { type: String },
   isProxied: { type: Boolean, default: false },
   meta: { type: Schema.Types.Mixed },
+  requestedBy: { type: String },
 });
 
 // Index for efficient querying

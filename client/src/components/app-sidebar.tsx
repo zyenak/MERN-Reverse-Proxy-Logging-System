@@ -20,6 +20,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { useAuth } from '@/hooks/useAuth';
 
 const navMain = [
   {
@@ -57,6 +58,12 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 }
 
 export function AppSidebar({ user, onLogout, ...props }: AppSidebarProps) {
+  const { isAdmin } = useAuth();
+  // Filter nav items based on role
+  const filteredNav = isAdmin
+    ? navMain
+    : navMain.filter(item => item.title === 'Dashboard');
+
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -77,7 +84,7 @@ export function AppSidebar({ user, onLogout, ...props }: AppSidebarProps) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={navMain} />
+        <NavMain items={filteredNav} />
       </SidebarContent>
       <SidebarFooter>
         {user && (

@@ -25,8 +25,10 @@ export const updateProxyRuleSchema = z.object({
 
 export const createUserSchema = z.object({
   username: z.string().min(3).max(50),
-  password: z.string().min(8).max(100), // Increased minimum password length
+  email: z.string().email(),
+  password: z.string().min(8).max(100),
   role: z.enum(['admin', 'user']).default('user'),
+  isActive: z.boolean().default(true),
 });
 
 export const updateUserSchema = z.object({

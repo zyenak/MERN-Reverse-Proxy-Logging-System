@@ -5,9 +5,33 @@ import bcrypt from 'bcryptjs';
 
 export const getUsers = async (req: Request, res: Response) => {
   try {
-    const users = await User.find({}, '-password');
-    logger.info('Admin users fetched successfully', { count: users.length });
-    res.json(users);
+    const page = parseInt((req.query.page as string) || '1', 10);
+    const limit = parseInt((req.query.limit as string) || '10', 10);
+    const search = req.query.search as string;
+    const skip = (page - 1) * limit;
+    
+    const query: any = {};
+    if (search) {
+      query.$or = [
+        { username: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } }
+      ];
+    }
+    
+    const [users, total] = await Promise.all([
+      User.find(query, '-password')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      User.countDocuments(query)
+    ]);
+    res.json({
+      users,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit)
+    });
   } catch (error) {
     logger.error('Error fetching admin users:', error);
     res.status(500).json({ message: 'Error fetching users', error });

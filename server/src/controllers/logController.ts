@@ -9,7 +9,7 @@ export const getLogs = async (req: Request, res: Response) => {
       date,
       search, 
       page = 1, 
-      limit = 20 
+      limit = 10 
     } = req.query;
     
     const query: any = {};
@@ -180,5 +180,37 @@ export const exportLogs = async (req: Request, res: Response) => {
     res.json(exportData);
   } catch (error) {
     res.status(500).json({ message: 'Error exporting logs', error });
+  }
+};
+
+export const getRecentLogs = async (req: Request, res: Response) => {
+  try {
+    const page = parseInt((req.query.page as string) || '1', 10);
+    const limit = parseInt((req.query.limit as string) || '10', 10);
+    const skip = (page - 1) * limit;
+    const [logs, total] = await Promise.all([
+      Log.find({ isProxied: true })
+        .sort({ timestamp: -1 })
+        .skip(skip)
+        .limit(limit)
+        .select('method url status timestamp responseTime'),
+      Log.countDocuments({ isProxied: true })
+    ]);
+    res.json({
+      logs: logs.map((log) => ({
+        id: log._id?.toString() || '',
+        method: log.method,
+        url: log.url,
+        status: log.status,
+        timestamp: log.timestamp.toISOString(),
+        responseTime: log.responseTime
+      })),
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit)
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching recent logs', error });
   }
 };

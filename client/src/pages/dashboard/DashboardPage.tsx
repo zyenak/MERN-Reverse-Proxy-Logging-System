@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { PaginatedTable } from '@/components/ui/PaginatedTable';
 import { 
   Activity, 
   Users, 
@@ -65,6 +66,11 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [proxyStatus, setProxyStatus] = useState<any>(null);
   const [usersLoading, setUsersLoading] = useState(false);
+  const [activity, setActivity] = useState<any[]>([]);
+  const [activityPage, setActivityPage] = useState(1);
+  const [activityLimit, setActivityLimit] = useState(10);
+  const [activityTotal, setActivityTotal] = useState(0);
+  const [activityLoading, setActivityLoading] = useState(false);
 
   const fetchDashboardStats = async () => {
     try {
@@ -113,6 +119,22 @@ export default function DashboardPage() {
     }
   };
 
+  const fetchRecentActivity = async (page = 1, limit = 10) => {
+    setActivityLoading(true);
+    try {
+      const data = await apiClient.get<any>('/logs/recent', { page, limit });
+      setActivity(data.logs);
+      setActivityTotal(data.total);
+      setActivityPage(data.page);
+      setActivityLimit(data.limit);
+    } catch (error) {
+      setActivity([]);
+      setActivityTotal(0);
+    } finally {
+      setActivityLoading(false);
+    }
+  };
+
   const refreshData = async () => {
     setLoading(true);
     await Promise.all([
@@ -139,6 +161,10 @@ export default function DashboardPage() {
   useEffect(() => {
     refreshData();
   }, []);
+
+  useEffect(() => {
+    fetchRecentActivity(activityPage, activityLimit);
+  }, [activityPage, activityLimit]);
 
   const getStatusColor = (status: number) => {
     if (status >= 200 && status < 300) return 'bg-green-100 text-green-800';
@@ -370,46 +396,21 @@ export default function DashboardPage() {
                   <CardDescription>Latest proxy requests and their status</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {stats?.recentActivity && stats.recentActivity.length > 0 ? (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Method</TableHead>
-                          <TableHead>URL</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Response Time</TableHead>
-                          <TableHead>Timestamp</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {stats.recentActivity.map((activity) => (
-                          <TableRow key={activity.id}>
-                            <TableCell>
-                              <Badge className={getMethodColor(activity.method)}>
-                                {activity.method}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="max-w-xs truncate">
-                              {activity.url}
-                            </TableCell>
-                            <TableCell>
-                              <Badge className={getStatusColor(activity.status)}>
-                                {activity.status}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>{activity.responseTime}ms</TableCell>
-                            <TableCell>
-                              {new Date(activity.timestamp).toLocaleString()}
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  ) : (
-                    <div className="text-center py-8 text-muted-foreground">
-                      No recent activity. Start making proxy requests to see activity here.
-                    </div>
-                  )}
+                  <PaginatedTable
+                    columns={[
+                      { header: 'Method', accessor: (log) => <Badge className={getMethodColor(log.method)}>{log.method}</Badge> },
+                      { header: 'URL', accessor: (log) => <span className="max-w-xs truncate block">{log.url}</span> },
+                      { header: 'Status', accessor: (log) => <Badge className={getStatusColor(log.status)}>{log.status}</Badge> },
+                      { header: 'Response Time', accessor: (log) => `${log.responseTime}ms` },
+                      { header: 'Timestamp', accessor: (log) => new Date(log.timestamp).toLocaleString() },
+                    ]}
+                    data={activity}
+                    page={activityPage}
+                    totalPages={Math.ceil(activityTotal / activityLimit)}
+                    onPageChange={setActivityPage}
+                    loading={activityLoading}
+                    emptyMessage="No recent activity. Start making proxy requests to see activity here."
+                  />
                 </CardContent>
               </Card>
             </TabsContent>

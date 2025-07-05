@@ -11,7 +11,8 @@
     "migrate": "ts-node src/scripts/migrateDatabase.ts",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "createTestData": "ts-node src/scripts/createTestData.ts"
   },
   "keywords": [],
   "author": "",

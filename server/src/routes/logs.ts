@@ -6,7 +6,8 @@ import {
   deleteLog, 
   deleteLogs, 
   getLogStats,
-  exportLogs
+  exportLogs,
+  getRecentLogs
 } from '@/controllers/logController';
 import asyncHandler from '@/utils/asyncHandler';
 
@@ -20,6 +21,9 @@ router.get('/stats', authenticate as RequestHandler, requireRole(['admin']) as R
 
 // Export logs
 router.get('/export', authenticate as RequestHandler, requireRole(['admin']) as RequestHandler, asyncHandler(exportLogs));
+
+// Get recent activity logs (paginated)
+router.get('/recent', authenticate as RequestHandler, requireRole(['admin']) as RequestHandler, asyncHandler(getRecentLogs));
 
 // Get specific log by ID
 router.get('/:id', authenticate as RequestHandler, requireRole(['admin']) as RequestHandler, asyncHandler(getLogById));

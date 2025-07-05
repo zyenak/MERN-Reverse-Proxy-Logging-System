@@ -38,4 +38,4 @@ export const deleteLog = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({ message: 'Error deleting log', error });
   }
-}; 
+};

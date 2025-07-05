@@ -7,6 +7,8 @@ import proxyRouter from './routes/proxy';
 import logsRouter from './routes/logs';
 import usersRouter from './routes/users';
 import proxyRuleRouter from './routes/proxyRule';
+import { errorHandler, notFound } from './middleware/errorHandler';
+import logger from './utils/logger';
 
 dotenv.config();
 
@@ -19,6 +21,12 @@ app.use('/api/logs', logsRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/proxy-rule', proxyRuleRouter);
 
+// 404 handler - must be after all routes
+app.use(notFound);
+
+// Global error handler - must be last
+app.use(errorHandler);
+
 const PORT = process.env.PORT || 5000;
 
 app.get('/', (_, res) => {
@@ -28,7 +36,11 @@ app.get('/', (_, res) => {
 const startServer = async () => {
   await connectDB();
   app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    if (process.env.NODE_ENV !== 'production') {
+      logger.info(`Server running on port ${PORT}`);
+    } else {
+      logger.info('Server started successfully');
+    }
   });
 };
 

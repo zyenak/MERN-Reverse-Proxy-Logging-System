@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import Log from '../models/Log';
-import ProxyRule from '../models/ProxyRule';
+import proxyRuleService from '../services/proxyRuleService';
+import logger from '../utils/logger';
 import { AuthRequest } from './auth';
 
 export const logRequest = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
@@ -8,31 +9,43 @@ export const logRequest = async (req: AuthRequest, res: Response, next: NextFunc
   const method = req.method;
   const url = req.originalUrl;
 
-  // Check proxy rules
-  const rule = await ProxyRule.findOne();
-  if (!rule || !rule.enabled) {
-    next();
-    return;
-  }
-  if (rule.whitelist.length > 0 && !rule.whitelist.some((path) => url.startsWith(path))) {
-    next();
-    return;
-  }
-
-  res.on('finish', async () => {
-    const responseTime = Date.now() - start;
-    try {
-      await Log.create({
-        method,
-        url,
-        timestamp: new Date(),
-        status: res.statusCode,
-        user: req.user ? req.user.username : undefined,
-        responseTime,
-      });
-    } catch (err) {
-      // Optionally log error
+  try {
+    // Check proxy rules using service
+    const isAllowed = await proxyRuleService.isRequestAllowed(url);
+    if (!isAllowed) {
+      next();
+      return;
     }
-  });
+
+    res.on('finish', async () => {
+      const responseTime = Date.now() - start;
+      try {
+        await Log.create({
+          method,
+          url,
+          timestamp: new Date(),
+          status: res.statusCode,
+          user: req.user ? req.user.username : undefined,
+          responseTime,
+        });
+        
+        if (process.env.NODE_ENV !== 'production') {
+          logger.debug('Request logged', {
+            method,
+            url,
+            status: res.statusCode,
+            responseTime,
+            user: req.user?.username
+          });
+        }
+      } catch (err) {
+        logger.error('Error logging request:', err);
+      }
+    });
+  } catch (error) {
+    logger.error('Error in logRequest middleware:', error);
+    // Continue processing even if logging fails
+  }
+  
   next();
 }; 

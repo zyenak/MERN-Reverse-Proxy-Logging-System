@@ -12,7 +12,8 @@ router.use(
   createProxyMiddleware({
     target: 'https://jsonplaceholder.typicode.com',
     changeOrigin: true,
-    pathRewrite: { '^/': '/users' },
+    pathRewrite: (path, req) => path.replace(/^\/api\/proxy/, '')
+
   })
 );
 

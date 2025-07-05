@@ -91,7 +91,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             >
               <Link to="/dashboard">
                 <IconInnerShadowTop className="!size-5" />
-                <span className="text-base font-semibold">Proxy Logger</span>
+                <span className="text-base font-semibold">Ability Proxy Logger</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

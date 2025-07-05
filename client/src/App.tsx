@@ -9,7 +9,6 @@ import LogsPage from '@/pages/logs/LogsPage';
 import ProxyRulesPage from '@/pages/proxy-rules/ProxyRulesPage';
 import UsersPage from '@/pages/users/UsersPage';
 import SettingsPage from '@/pages/settings/SettingsPage';
-import './App.css';
 
 // Public Route Component - redirects to dashboard if authenticated
 const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {

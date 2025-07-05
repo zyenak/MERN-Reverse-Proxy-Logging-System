@@ -20,7 +20,7 @@ export function SiteHeader({ user, onLogout }: SiteHeaderProps) {
           orientation="vertical"
           className="mx-2 data-[orientation=vertical]:h-4"
         />
-        <h1 className="text-base font-medium">Reverse Proxy Logger</h1>
+        <h1 className="text-base font-medium">Ability - Reverse Proxy Logger</h1>
         <div className="ml-auto flex items-center gap-2">
           {user && (
             <DropdownMenu>

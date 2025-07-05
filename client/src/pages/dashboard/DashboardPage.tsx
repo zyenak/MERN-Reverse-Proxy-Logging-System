@@ -65,7 +65,7 @@ const DashboardPage: React.FC = () => {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-muted-foreground">
-            Monitor your reverse proxy system and logs
+            Monitor your reverse proxy system, request logs, and performance metrics
           </p>
         </div>
         <div className="flex items-center space-x-2">

@@ -2,109 +2,179 @@ import ProxyRule, { IProxyRule } from '@/models/ProxyRule';
 import logger from '@/utils/logger';
 
 export class ProxyRuleService {
-  private static instance: ProxyRuleService;
-  private cachedRule: IProxyRule | null = null;
+  private cachedRules: IProxyRule[] = [];
   private cacheExpiry: number = 0;
   private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
-  private constructor() {}
-
-  public static getInstance(): ProxyRuleService {
-    if (!ProxyRuleService.instance) {
-      ProxyRuleService.instance = new ProxyRuleService();
-    }
-    return ProxyRuleService.instance;
-  }
-
   private isCacheValid(): boolean {
-    return this.cachedRule !== null && Date.now() < this.cacheExpiry;
+    return this.cachedRules.length > 0 && Date.now() < this.cacheExpiry;
   }
 
-  private setCache(rule: IProxyRule): void {
-    this.cachedRule = rule;
+  private setCache(rules: IProxyRule[]): void {
+    this.cachedRules = rules;
     this.cacheExpiry = Date.now() + this.CACHE_DURATION;
   }
 
   private clearCache(): void {
-    this.cachedRule = null;
+    this.cachedRules = [];
     this.cacheExpiry = 0;
   }
 
-  public async getOrCreateProxyRule(): Promise<IProxyRule> {
+  public async getAllRules(): Promise<IProxyRule[]> {
     try {
-      // Check cache first
       if (this.isCacheValid()) {
-        return this.cachedRule!;
+        return this.cachedRules;
       }
 
-      // Fetch from database
-      let rule = await ProxyRule.findOne();
-      
-      if (!rule) {
-        rule = await ProxyRule.create({ enabled: true, whitelist: [] });
-        logger.info('Created new proxy rule with default settings');
-      }
+      const rules = await ProxyRule.find({ enabled: true })
+        .sort({ priority: -1, createdAt: -1 })
+        .exec();
 
-      this.setCache(rule);
-      return rule;
+      this.setCache(rules);
+      return rules;
     } catch (error) {
-      logger.error('Error in getOrCreateProxyRule:', error);
+      logger.error('Error fetching proxy rules:', error);
       throw error;
     }
   }
 
-  public async updateProxyRule(updates: Partial<IProxyRule>): Promise<IProxyRule> {
+  public async createRule(ruleData: Partial<IProxyRule>): Promise<IProxyRule> {
     try {
-      let rule = await ProxyRule.findOne();
-      
-      if (!rule) {
-        rule = await ProxyRule.create({ enabled: true, whitelist: [], ...updates });
-        logger.info('Created new proxy rule with updates');
-      } else {
-        Object.assign(rule, updates);
-        await rule.save();
-        logger.info('Updated existing proxy rule');
-      }
-
-      this.clearCache(); // Clear cache after update
+      const rule = await ProxyRule.create(ruleData);
+      this.clearCache();
+      logger.info(`Created new proxy rule: ${rule.name}`);
       return rule;
     } catch (error) {
-      logger.error('Error in updateProxyRule:', error);
+      logger.error('Error creating proxy rule:', error);
       throw error;
     }
   }
 
-  public async resetProxyRule(): Promise<IProxyRule> {
+  public async updateRule(ruleId: string, updates: Partial<IProxyRule>): Promise<IProxyRule | null> {
+    try {
+      const rule = await ProxyRule.findByIdAndUpdate(
+        ruleId,
+        { ...updates, updatedAt: new Date() },
+        { new: true, runValidators: true }
+      );
+      
+      if (rule) {
+        this.clearCache();
+        logger.info(`Updated proxy rule: ${rule.name}`);
+      }
+      
+      return rule;
+    } catch (error) {
+      logger.error('Error updating proxy rule:', error);
+      throw error;
+    }
+  }
+
+  public async deleteRule(ruleId: string): Promise<boolean> {
+    try {
+      const result = await ProxyRule.findByIdAndDelete(ruleId);
+      if (result) {
+        this.clearCache();
+        logger.info(`Deleted proxy rule: ${result.name}`);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      logger.error('Error deleting proxy rule:', error);
+      throw error;
+    }
+  }
+
+  public async getRuleById(ruleId: string): Promise<IProxyRule | null> {
+    try {
+      return await ProxyRule.findById(ruleId);
+    } catch (error) {
+      logger.error('Error fetching proxy rule by ID:', error);
+      throw error;
+    }
+  }
+
+  public async findMatchingRule(url: string, method: string): Promise<IProxyRule | null> {
+    try {
+      const rules = await this.getAllRules();
+      
+      // Find the first matching rule (highest priority first)
+      const matchingRule = rules.find(rule => {
+        const pathMatches = url.includes(rule.path) || url.startsWith(rule.path);
+        const methodMatches = rule.methods.includes(method.toUpperCase());
+        return pathMatches && methodMatches;
+      });
+
+      return matchingRule || null;
+    } catch (error) {
+      logger.error('Error finding matching proxy rule:', error);
+      return null;
+    }
+  }
+
+  public async shouldBlockRequest(url: string, method: string): Promise<boolean> {
+    try {
+      const matchingRule = await this.findMatchingRule(url, method);
+      return matchingRule ? matchingRule.isBlocked : false;
+    } catch (error) {
+      logger.error('Error checking if request should be blocked:', error);
+      return false; // Default to allowing on error
+    }
+  }
+
+  public async shouldLogRequest(url: string, method: string): Promise<boolean> {
+    try {
+      const matchingRule = await this.findMatchingRule(url, method);
+      return matchingRule ? matchingRule.loggingEnabled : true; // Default to logging
+    } catch (error) {
+      logger.error('Error checking if request should be logged:', error);
+      return true; // Default to logging on error
+    }
+  }
+
+  public async getForwardTarget(url: string, method: string): Promise<string | null> {
+    try {
+      const matchingRule = await this.findMatchingRule(url, method);
+      return matchingRule?.forwardTarget || null;
+    } catch (error) {
+      logger.error('Error getting forward target:', error);
+      return null;
+    }
+  }
+
+  public async resetToDefaults(): Promise<void> {
     try {
       await ProxyRule.deleteMany({});
-      const rule = await ProxyRule.create({ enabled: true, whitelist: [] });
-      this.clearCache(); // Clear cache after reset
-      logger.info('Reset proxy rule to default settings');
-      return rule;
-    } catch (error) {
-      logger.error('Error in resetProxyRule:', error);
-      throw error;
-    }
-  }
-
-  public async isRequestAllowed(url: string): Promise<boolean> {
-    try {
-      const rule = await this.getOrCreateProxyRule();
       
-      if (!rule.enabled) {
-        return false;
-      }
+      // Create default rules
+      await ProxyRule.create([
+        {
+          name: 'Default API Access',
+          path: '/api',
+          methods: ['GET', 'POST', 'PUT', 'DELETE'],
+          loggingEnabled: true,
+          isBlocked: false,
+          priority: 0,
+          enabled: true
+        },
+        {
+          name: 'Block Sensitive Endpoints',
+          path: '/api/admin',
+          methods: ['GET', 'POST', 'PUT', 'DELETE'],
+          loggingEnabled: true,
+          isBlocked: true,
+          priority: 10,
+          enabled: true
+        }
+      ]);
 
-      if (rule.whitelist.length === 0) {
-        return true; // No whitelist means all paths are allowed
-      }
-
-      return rule.whitelist.some((path) => url.startsWith(path));
+      this.clearCache();
+      logger.info('Reset proxy rules to default settings');
     } catch (error) {
-      logger.error('Error checking if request is allowed:', error);
-      return false; // Default to blocking on error
+      logger.error('Error resetting proxy rules:', error);
+      throw error;
     }
   }
 }
 
-export default ProxyRuleService.getInstance(); 
+export default new ProxyRuleService(); 

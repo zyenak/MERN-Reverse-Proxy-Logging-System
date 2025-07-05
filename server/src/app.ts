@@ -8,18 +8,72 @@ import logsRouter from '@/routes/logs';
 import usersRouter from '@/routes/users';
 import proxyRuleRouter from '@/routes/proxyRule';
 import { errorHandler, notFound } from '@/middleware/errorHandler';
+import { 
+  authRateLimit, 
+  proxyRateLimit, 
+  apiRateLimit, 
+  sanitizeInput, 
+  limitRequestSize, 
+  securityHeaders 
+} from '@/middleware/security';
 import logger from '@/utils/logger';
 
 dotenv.config();
 
 const app = express();
-app.use(cors());
-app.use(express.json());
+
+// Security middleware
+app.use(securityHeaders);
+app.use(limitRequestSize);
+app.use(sanitizeInput);
+
+// CORS configuration
+app.use(cors({
+  origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+// Body parsing middleware
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Rate limiting
+app.use('/api/auth', authRateLimit);
+app.use('/api/proxy', proxyRateLimit);
+app.use('/api', apiRateLimit);
+
+// Routes
 app.use('/api/auth', authRouter);
 app.use('/api/proxy', proxyRouter);
 app.use('/api/logs', logsRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/proxy-rule', proxyRuleRouter);
+
+// Health check endpoint
+app.get('/health', (_, res) => {
+  res.json({ 
+    status: 'healthy', 
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
+// Root endpoint
+app.get('/', (_, res) => {
+  res.json({ 
+    message: 'Reverse Proxy Logger API',
+    version: '1.0.0',
+    endpoints: {
+      auth: '/api/auth',
+      proxy: '/api/proxy',
+      logs: '/api/logs',
+      users: '/api/users',
+      proxyRules: '/api/proxy-rule'
+    }
+  });
+});
 
 // 404 handler - must be after all routes
 app.use(notFound);
@@ -29,19 +83,18 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
-app.get('/', (_, res) => {
-  res.send('Reverse Proxy Logger API');
-});
-
 const startServer = async () => {
-  await connectDB();
-  app.listen(PORT, () => {
-    if (process.env.NODE_ENV !== 'production') {
+  try {
+    await connectDB();
+    app.listen(PORT, () => {
       logger.info(`Server running on port ${PORT}`);
-    } else {
-      logger.info('Server started successfully');
-    }
-  });
+      logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
+      logger.info(`Health check: http://localhost:${PORT}/health`);
+    });
+  } catch (error) {
+    logger.error('Failed to start server:', error);
+    process.exit(1);
+  }
 };
 
 startServer();

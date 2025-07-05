@@ -1,20 +1,17 @@
 import { Router } from 'express';
-import { createProxyMiddleware } from 'http-proxy-middleware';
 import { authenticate } from '@/middleware/auth';
-import { logRequest } from '@/middleware/logRequest';
+import { handleProxy, getProxyStatus } from '@/controllers/proxyController';
 
 const router = Router();
 
-router.use(
-  '/',
-  authenticate,
-  logRequest,
-  createProxyMiddleware({
-    target: 'https://jsonplaceholder.typicode.com',
-    changeOrigin: true,
-    pathRewrite: (path, req) => path.replace(/^\/api\/proxy/, '')
+// Get proxy status
+router.get('/status', getProxyStatus);
 
-  })
-);
+// Handle all proxy requests - use a simple parameter
+router.get('/:path', authenticate, handleProxy);
+router.post('/:path', authenticate, handleProxy);
+router.put('/:path', authenticate, handleProxy);
+router.delete('/:path', authenticate, handleProxy);
+router.patch('/:path', authenticate, handleProxy);
 
 export default router; 

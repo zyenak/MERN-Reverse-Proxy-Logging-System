@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET as string;
+// JWT_SECRET will be accessed inside functions after dotenv is loaded
 
 export interface AuthRequest extends Request {
   user?: any;
@@ -17,6 +17,12 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
   const token = authHeader.split(' ')[1];
   
   try {
+    const JWT_SECRET = process.env.JWT_SECRET as string;
+    if (!JWT_SECRET) {
+      res.status(500).json({ message: 'Server configuration error.' });
+      return;
+    }
+    
     const decoded = jwt.verify(token, JWT_SECRET, {
       algorithms: ['HS256'],
       issuer: 'mern-reverse-proxy',

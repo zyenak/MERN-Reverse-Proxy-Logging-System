@@ -1,13 +1,29 @@
-import apiService from './api';
+import apiClient from './apiClient';
 import type { LoginCredentials, RegisterCredentials, AuthResponse, User } from '@/types';
 
 export class AuthService {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    return apiService.post<AuthResponse>('/auth/login', credentials);
+    try {
+      const response = await apiClient.post<AuthResponse>('/auth/login', credentials);
+      return response;
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      }
+      throw new Error('Login failed. Please try again.');
+    }
   }
 
   async register(credentials: RegisterCredentials): Promise<AuthResponse> {
-    return apiService.post<AuthResponse>('/auth/register', credentials);
+    try {
+      const response = await apiClient.post<AuthResponse>('/auth/register', credentials);
+      return response;
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      }
+      throw new Error('Registration failed. Please try again.');
+    }
   }
 
   logout(): void {
@@ -37,6 +53,8 @@ export class AuthService {
     const user = this.getUser();
     return user?.role === 'admin';
   }
+
+
 }
 
 export const authService = new AuthService();

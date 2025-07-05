@@ -1,20 +1,34 @@
-import { useApi } from '@/hooks';
-import type { LoginCredentials, RegisterCredentials, AuthResponse } from '@/types';
+import { useContext } from 'react';
+import { AuthContext } from '@/context/AuthContext';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-
-export const useLogin = () => {
-  return useApi<AuthResponse>({
-    url: `${API_BASE_URL}/auth/login`,
-    method: 'POST',
-    showToast: true,
-  });
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 };
 
-export const useRegister = () => {
-  return useApi<AuthResponse>({
-    url: `${API_BASE_URL}/auth/register`,
-    method: 'POST',
-    showToast: true,
-  });
+// Custom hook for login form
+export const useLogin = () => {
+  const { login, loginLoading, error, clearError } = useAuth();
+  
+  const handleLogin = async (username: string, password: string) => {
+    try {
+      await login(username, password);
+      return { success: true };
+    } catch (error: any) {
+      return { 
+        success: false, 
+        error: error.message || 'Login failed' 
+      };
+    }
+  };
+
+  return {
+    login: handleLogin,
+    loading: loginLoading,
+    error,
+    clearError,
+  };
 }; 

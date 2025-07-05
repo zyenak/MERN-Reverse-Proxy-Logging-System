@@ -50,7 +50,7 @@ const UsersPage: React.FC = () => {
     e.preventDefault();
     try {
       if (editingUser) {
-        await userService.updateUser(editingUser._id, {
+        await userService.updateUser(editingUser.id, {
           username: formData.username,
           role: formData.role
         });
@@ -201,7 +201,7 @@ const UsersPage: React.FC = () => {
       {/* Users Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {users.map((user) => (
-          <Card key={user._id}>
+          <Card key={user.id}>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
@@ -217,7 +217,7 @@ const UsersPage: React.FC = () => {
                 </Badge>
               </div>
               <CardDescription>
-                User ID: {user._id}
+                User ID: {user.id}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -257,7 +257,7 @@ const UsersPage: React.FC = () => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleDelete(user._id)}
+                    onClick={() => handleDelete(user.id)}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>

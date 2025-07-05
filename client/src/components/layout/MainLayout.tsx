@@ -2,7 +2,8 @@ import React from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { AppSidebar } from '@/components/app-sidebar';
 import { SiteHeader } from '@/components/site-header';
-import { useAuth } from '@/context/AuthContext';
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
+import { useAuth } from '@/hooks/useAuth';
 import { 
   IconDashboard,
   IconFileDescription,
@@ -50,18 +51,20 @@ const MainLayout: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen">
-      <AppSidebar className="hidden lg:flex" />
-      <div className="flex-1 flex flex-col">
-        <SiteHeader 
-          user={user}
-          onLogout={handleLogout}
-        />
-        <main className="flex-1 overflow-auto p-6 bg-gray-50">
-          <Outlet />
-        </main>
+    <SidebarProvider>
+      <div className="flex h-screen">
+        <AppSidebar className="hidden lg:flex" />
+        <SidebarInset>
+          <SiteHeader 
+            user={user}
+            onLogout={handleLogout}
+          />
+          <main className="flex-1 overflow-auto p-6 bg-gray-50">
+            <Outlet />
+          </main>
+        </SidebarInset>
       </div>
-    </div>
+    </SidebarProvider>
   );
 };
 

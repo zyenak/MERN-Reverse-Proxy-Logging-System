@@ -32,7 +32,8 @@ class ApiClient {
     this.api.interceptors.response.use(
       (response: AxiosResponse) => response,
       (error) => {
-        if (error.response?.status === 401) {
+        // Only redirect on 401 for authenticated requests, not for login/register
+        if (error.response?.status === 401 && !error.config.url?.includes('/auth/login') && !error.config.url?.includes('/auth/register')) {
           localStorage.removeItem('token');
           localStorage.removeItem('user');
           window.location.href = '/';

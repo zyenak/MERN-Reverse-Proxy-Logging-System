@@ -1,8 +1,7 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useEffect, useState, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import type { User } from '@/types';
 import authService from '@/services/authService';
-import { useLocalStorage } from '@/hooks';
 
 interface AuthContextType {
   user: User | null;
@@ -12,59 +11,107 @@ interface AuthContextType {
   register: (username: string, password: string, role?: 'admin' | 'user') => Promise<void>;
   logout: () => void;
   loading: boolean;
+  loginLoading: boolean;
+  error: string | null;
+  clearError: () => void;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 interface AuthProviderProps {
   children: ReactNode;
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useLocalStorage<User | null>('user', null);
-  const [token, setToken] = useLocalStorage<string | null>('token', null);
+  const [user, setUser] = useState<User | null>(() => {
+    if (typeof window !== 'undefined') {
+      const userStr = localStorage.getItem('user');
+      return userStr ? JSON.parse(userStr) : null;
+    }
+    return null;
+  });
+  
+  const [token, setToken] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('token');
+    }
+    return null;
+  });
+  
   const [loading, setLoading] = useState(true);
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check if user is already logged in
-    if (token && user) {
-      setLoading(false);
-    } else {
-      setLoading(false);
-    }
-  }, [token, user]);
+    // Simple initialization - just check if we have auth data
+    setLoading(false);
+  }, []); // Only run once on mount
 
   const login = async (username: string, password: string) => {
     try {
+      setLoginLoading(true);
+      setError(null);
+      
       const response = await authService.login({ username, password });
-      setToken(response.token);
-      setUser(response.user);
-    } catch (error) {
+      
+      // Store auth data
+      authService.setAuthData(response.token, response.user);
+      updateToken(response.token);
+      updateUser(response.user);
+    } catch (error: any) {
+      setError(error.message || 'Login failed');
       throw error;
+    } finally {
+      setLoginLoading(false);
     }
   };
 
+  const updateToken = useCallback((newToken: string | null) => {
+    setToken(newToken);
+    if (newToken) {
+      localStorage.setItem('token', newToken);
+    } else {
+      localStorage.removeItem('token');
+    }
+  }, []);
+
+  const updateUser = useCallback((newUser: User | null) => {
+    setUser(newUser);
+    if (newUser) {
+      localStorage.setItem('user', JSON.stringify(newUser));
+    } else {
+      localStorage.removeItem('user');
+    }
+  }, []);
+
   const register = async (username: string, password: string, role?: 'admin' | 'user') => {
     try {
+      setLoading(true);
+      setError(null);
+      
       const response = await authService.register({ username, password, role });
-      setToken(response.token);
-      setUser(response.user);
-    } catch (error) {
+      
+      // Store auth data
+      authService.setAuthData(response.token, response.user);
+      updateToken(response.token);
+      updateUser(response.user);
+    } catch (error: any) {
+      setError(error.message || 'Registration failed');
       throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
   const logout = () => {
-    setToken(null);
-    setUser(null);
+    authService.logout();
+    updateToken(null);
+    updateUser(null);
+    setError(null);
+  };
+
+  const clearError = () => {
+    setError(null);
   };
 
   const value: AuthContextType = {
@@ -75,6 +122,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     register,
     logout,
     loading,
+    loginLoading,
+    error,
+    clearError,
   };
 
   return (

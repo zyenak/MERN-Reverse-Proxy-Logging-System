@@ -8,7 +8,9 @@
     "build": "tsc",
     "start": "node dist/app.js",
     "create-admin": "ts-node src/scripts/createAdmin.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "keywords": [],
   "author": "",
@@ -21,16 +23,21 @@
     "http-proxy-middleware": "^3.0.5",
     "jsonwebtoken": "^9.0.0",
     "mongoose": "^8.16.1",
-    "winston": "^3.17.0",
-    "zod": "^3.25.74"
+    "winston": "^3.11.0",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
+    "@types/jest": "^29.5.14",
     "@types/jsonwebtoken": "^9.0.2",
     "@types/node": "^24.0.10",
+    "@types/supertest": "^6.0.3",
+    "jest": "^29.7.0",
     "nodemon": "^3.1.10",
+    "supertest": "^6.3.4",
+    "ts-jest": "^29.4.0",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.8.3"

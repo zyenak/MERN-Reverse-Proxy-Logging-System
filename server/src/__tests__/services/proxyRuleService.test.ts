@@ -1,9 +1,9 @@
 import mongoose from 'mongoose';
-import { ProxyRuleService } from '../../services/proxyRuleService';
-import ProxyRule from '../../models/ProxyRule';
+import { ProxyRuleService } from '@/services/proxyRuleService';
+import ProxyRule from '@/models/ProxyRule';
 
 // Mock the ProxyRule model
-jest.mock('../../models/ProxyRule');
+jest.mock('@/models/ProxyRule');
 const MockedProxyRule = ProxyRule as jest.Mocked<typeof ProxyRule>;
 
 describe('ProxyRuleService', () => {

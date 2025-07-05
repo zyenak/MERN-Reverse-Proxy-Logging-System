@@ -26,7 +26,7 @@ A full-stack TypeScript application using the MERN stack (MongoDB, Express.js, R
 
 ## Prerequisites
 
-- Node.js (v16 or higher)
+- Node.js (v22.17.0 or higher)
 - MongoDB (local or Atlas)
 - npm or yarn
 

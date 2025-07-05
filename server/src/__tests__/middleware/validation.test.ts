@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { validateRequest } from '../../middleware/validation';
+import { validateRequest } from '@/middleware/validation';
 import { z } from 'zod';
 
 describe('validateRequest middleware', () => {

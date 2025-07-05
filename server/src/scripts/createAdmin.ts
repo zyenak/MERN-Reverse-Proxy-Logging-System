@@ -1,8 +1,8 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
-import User from '../models/User';
+import User from '@/models/User';
 import dotenv from 'dotenv';
-import logger from '../utils/logger';
+import logger from '@/utils/logger';
 
 dotenv.config();
 

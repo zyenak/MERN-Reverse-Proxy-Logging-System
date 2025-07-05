@@ -1,14 +1,14 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import connectDB from './services/db';
-import authRouter from './routes/auth';
-import proxyRouter from './routes/proxy';
-import logsRouter from './routes/logs';
-import usersRouter from './routes/users';
-import proxyRuleRouter from './routes/proxyRule';
-import { errorHandler, notFound } from './middleware/errorHandler';
-import logger from './utils/logger';
+import connectDB from '@/services/db';
+import authRouter from '@/routes/auth';
+import proxyRouter from '@/routes/proxy';
+import logsRouter from '@/routes/logs';
+import usersRouter from '@/routes/users';
+import proxyRuleRouter from '@/routes/proxyRule';
+import { errorHandler, notFound } from '@/middleware/errorHandler';
+import logger from '@/utils/logger';
 
 dotenv.config();
 

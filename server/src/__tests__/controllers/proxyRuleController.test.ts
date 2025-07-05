@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
-import { getProxyRule, updateProxyRule, resetProxyRule } from '../../controllers/proxyRuleController';
-import proxyRuleService from '../../services/proxyRuleService';
+import { getProxyRule, updateProxyRule, resetProxyRule } from '@/controllers/proxyRuleController';
+import proxyRuleService from '@/services/proxyRuleService';
 
 // Mock dependencies
-jest.mock('../../services/proxyRuleService');
-jest.mock('../../utils/logger');
+jest.mock('@/services/proxyRuleService');
+jest.mock('@/utils/logger');
 
 const MockedProxyRuleService = proxyRuleService as jest.Mocked<typeof proxyRuleService>;
 

@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
-import { getUsers, deleteUser, getExternalUsers } from '../../controllers/adminUserController';
-import User from '../../models/User';
+import { getUsers, deleteUser, getExternalUsers } from '@/controllers/adminUserController';
+import User from '@/models/User';
 
 // Mock dependencies
-jest.mock('../../models/User');
-jest.mock('../../utils/logger');
+jest.mock('@/models/User');
+jest.mock('@/utils/logger');
 
 const MockedUser = User as jest.Mocked<typeof User>;
 

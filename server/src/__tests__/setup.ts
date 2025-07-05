@@ -7,7 +7,7 @@ dotenv.config({ path: '.env.test' });
 process.env.NODE_ENV = 'test';
 
 // Mock winston logger for tests
-jest.mock('../utils/logger', () => ({
+jest.mock('@/utils/logger', () => ({
   info: jest.fn(),
   error: jest.fn(),
   warn: jest.fn(),

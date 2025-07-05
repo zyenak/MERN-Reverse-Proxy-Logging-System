@@ -1,8 +1,8 @@
 import { Router, RequestHandler } from 'express';
-import { getUsers, deleteUser, getExternalUsers } from '../controllers/adminUserController';
-import { authenticate } from '../middleware/auth';
-import { validateRequest } from '../middleware/validation';
-import asyncHandler from '../utils/asyncHandler';
+import { getUsers, deleteUser, getExternalUsers } from '@/controllers/adminUserController';
+import { authenticate } from '@/middleware/auth';
+import { validateRequest } from '@/middleware/validation';
+import asyncHandler from '@/utils/asyncHandler';
 
 const router = Router();
 

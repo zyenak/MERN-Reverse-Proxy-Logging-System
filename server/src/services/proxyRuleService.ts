@@ -1,5 +1,5 @@
-import ProxyRule, { IProxyRule } from '../models/ProxyRule';
-import logger from '../utils/logger';
+import ProxyRule, { IProxyRule } from '@/models/ProxyRule';
+import logger from '@/utils/logger';
 
 export class ProxyRuleService {
   private static instance: ProxyRuleService;

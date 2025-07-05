@@ -1,9 +1,9 @@
 import { Router, RequestHandler } from 'express';
-import { getProxyRule, updateProxyRule, resetProxyRule } from '../controllers/proxyRuleController';
-import { authenticate } from '../middleware/auth';
-import { validateRequest } from '../middleware/validation';
-import { updateProxyRuleSchema } from '../utils/validation';
-import asyncHandler from '../utils/asyncHandler';
+import { getProxyRule, updateProxyRule, resetProxyRule } from '@/controllers/proxyRuleController';
+import { authenticate } from '@/middleware/auth';
+import { validateRequest } from '@/middleware/validation';
+import { updateProxyRuleSchema } from '@/utils/validation';
+import asyncHandler from '@/utils/asyncHandler';
 
 const router = Router();
 

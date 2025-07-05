@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import Log from '../models/Log';
+import Log from '@/models/Log';
 
 export const getLogs = async (req: Request, res: Response) => {
   try {

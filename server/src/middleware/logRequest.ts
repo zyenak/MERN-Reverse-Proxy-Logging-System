@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
-import Log from '../models/Log';
-import proxyRuleService from '../services/proxyRuleService';
-import logger from '../utils/logger';
-import { AuthRequest } from './auth';
+import Log from '@/models/Log';
+import proxyRuleService from '@/services/proxyRuleService';
+import logger from '@/utils/logger';
+import { AuthRequest } from '@/middleware/auth';
 
 export const logRequest = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const start = Date.now();

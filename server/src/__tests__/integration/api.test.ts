@@ -1,9 +1,9 @@
 import request from 'supertest';
 import express from 'express';
 import mongoose from 'mongoose';
-import authRouter from '../../routes/auth';
-import usersRouter from '../../routes/users';
-import proxyRuleRouter from '../../routes/proxyRule';
+import authRouter from '@/routes/auth';
+import usersRouter from '@/routes/users';
+import proxyRuleRouter from '@/routes/proxyRule';
 
 // Create test app
 const app = express();
@@ -13,7 +13,7 @@ app.use('/api/users', usersRouter);
 app.use('/api/proxy-rule', proxyRuleRouter);
 
 // Mock authentication middleware for protected routes
-jest.mock('../../middleware/auth', () => ({
+jest.mock('@/middleware/auth', () => ({
   authenticate: (req: any, res: any, next: any) => next(),
 }));
 

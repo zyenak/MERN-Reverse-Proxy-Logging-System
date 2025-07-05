@@ -1,14 +1,14 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { register, login } from '../../controllers/authController';
-import User from '../../models/User';
+import { register, login } from '@/controllers/authController';
+import User from '@/models/User';
 
 // Mock dependencies
-jest.mock('../../models/User');
+jest.mock('@/models/User');
 jest.mock('bcryptjs');
 jest.mock('jsonwebtoken');
-jest.mock('../../utils/logger');
+jest.mock('@/utils/logger');
 
 const MockedUser = User as jest.Mocked<typeof User>;
 const MockedBcrypt = bcrypt as jest.Mocked<typeof bcrypt>;

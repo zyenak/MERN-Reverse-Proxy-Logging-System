@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
-import proxyRuleService from '../services/proxyRuleService';
-import logger from '../utils/logger';
-import { UpdateProxyRuleInput } from '../utils/validation';
+import proxyRuleService from '@/services/proxyRuleService';
+import logger from '@/utils/logger';
+import { UpdateProxyRuleInput } from '@/utils/validation';
 
 export const getProxyRule = async (_req: Request, res: Response) => {
   try {

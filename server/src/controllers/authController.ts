@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
-import User, { IUser } from '../models/User';
+import User, { IUser } from '@/models/User';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import logger from '../utils/logger';
-import { CreateUserInput, LoginInput } from '../utils/validation';
+import logger from '@/utils/logger';
+import { CreateUserInput, LoginInput } from '@/utils/validation';
 
 const JWT_SECRET = process.env.JWT_SECRET as string;
 

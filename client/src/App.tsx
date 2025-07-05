@@ -11,6 +11,17 @@ import ProxyRulesPage from '@/pages/proxy-rules/ProxyRulesPage';
 import UsersPage from '@/pages/users/UsersPage';
 import SettingsPage from '@/pages/settings/SettingsPage';
 
+// Admin Route Wrapper Component
+const AdminRouteWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAdmin } = useAuth();
+  
+  if (!isAdmin) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  
+  return <>{children}</>;
+};
+
 // Public Route Component - redirects to dashboard if authenticated
 const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -49,28 +60,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   return <>{children}</>;
 };
 
-// Admin Route Component
-const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated, isAdmin, loading } = useAuth();
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/" replace />;
-  }
-
-  if (!isAdmin) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
-  return <>{children}</>;
-};
 
 const AppRoutes: React.FC = () => {
   return (
@@ -85,61 +75,20 @@ const AppRoutes: React.FC = () => {
         } 
       />
       
-      {/* Protected Routes */}
+      {/* Protected Routes - Single MainLayout for all authenticated routes */}
       <Route
-        path="/dashboard"
+        path="/"
         element={
           <ProtectedRoute>
             <MainLayout />
           </ProtectedRoute>
         }
       >
-        <Route index element={<DashboardPage />} />
-      </Route>
-
-      <Route
-        path="/logs"
-        element={
-          <ProtectedRoute>
-            <MainLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<LogsPage />} />
-      </Route>
-
-      <Route
-        path="/settings"
-        element={
-          <ProtectedRoute>
-            <MainLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<SettingsPage />} />
-      </Route>
-      
-      {/* Admin Only Routes */}
-      <Route
-        path="/proxy-rules"
-        element={
-          <AdminRoute>
-            <MainLayout />
-          </AdminRoute>
-        }
-      >
-        <Route index element={<ProxyRulesPage />} />
-      </Route>
-
-      <Route
-        path="/users"
-        element={
-          <AdminRoute>
-            <MainLayout />
-          </AdminRoute>
-        }
-      >
-        <Route index element={<UsersPage />} />
+        <Route path="dashboard" element={<DashboardPage />} />
+        <Route path="logs" element={<LogsPage />} />
+        <Route path="settings" element={<SettingsPage />} />
+        <Route path="proxy-rules" element={<AdminRouteWrapper><ProxyRulesPage /></AdminRouteWrapper>} />
+        <Route path="users" element={<AdminRouteWrapper><UsersPage /></AdminRouteWrapper>} />
       </Route>
 
       {/* Catch all route */}
@@ -152,14 +101,12 @@ const App: React.FC = () => {
   return (
     <Router>
       <AuthProvider>
-        <div className="App">
-          <AppRoutes />
-          <Toaster 
-            position="top-right"
-            richColors
-            closeButton
-          />
-        </div>
+        <AppRoutes />
+        <Toaster 
+          position="top-right"
+          richColors
+          closeButton
+        />
       </AuthProvider>
     </Router>
   );

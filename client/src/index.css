@@ -37,6 +37,12 @@
   --sidebar-accent-foreground: var(--accent-foreground);
   --sidebar-border: var(--border);
   --sidebar-ring: var(--ring);
+  
+  /* Sidebar width variables */
+  --sidebar-width: 16rem;
+  --sidebar-width-icon: 4rem;
+  --sidebar-width-mobile: 20rem;
+  --header-height: 4rem;
 }
 
 .dark {
@@ -63,6 +69,12 @@
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
+  
+  /* Sidebar width variables for dark theme */
+  --sidebar-width: 16rem;
+  --sidebar-width-icon: 4rem;
+  --sidebar-width-mobile: 20rem;
+  --header-height: 4rem;
 }
 
 @theme inline {
@@ -116,7 +128,7 @@
     @apply overflow-x-hidden;
   }
   body {
-    @apply bg-background text-foreground min-h-svh w-full;
+    @apply bg-background text-foreground min-h-svh w-full overflow-x-hidden;
   }
 
   button:not(:disabled),

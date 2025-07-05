@@ -56,7 +56,7 @@ export function LoginForm({
           <form onSubmit={handleSubmit}>
             <div className="grid gap-6">
               <div className="grid gap-3">
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="username" className="mb-2">Username</Label>
                 <Input
                   id="username"
                   type="text"
@@ -69,7 +69,7 @@ export function LoginForm({
               </div>
                             <div className="grid gap-3">
                                 <div className="flex items-center">
-                                    <Label htmlFor="password">Password</Label>
+                                    <Label htmlFor="password" className="mb-2">Password</Label>
                                     <span className="ml-auto text-sm text-muted-foreground cursor-not-allowed">
                                         Forgot your password?
                                     </span>

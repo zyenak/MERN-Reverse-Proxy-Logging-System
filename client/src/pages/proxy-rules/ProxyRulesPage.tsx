@@ -196,13 +196,7 @@ export default function ProxyRulesPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Proxy Rules</h1>
-          <p className="text-muted-foreground">
-            Manage proxy routing rules and access control
-          </p>
-        </div>
+      <div className="flex items-center justify-end">
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button>
@@ -220,7 +214,7 @@ export default function ProxyRulesPage() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="name">Rule Name</Label>
+                  <Label htmlFor="name" className="mb-2">Rule Name</Label>
                   <Input
                     id="name"
                     value={formData.name}
@@ -229,7 +223,7 @@ export default function ProxyRulesPage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="path">Path Pattern</Label>
+                  <Label htmlFor="path" className="mb-2">Path Pattern</Label>
                   <Input
                     id="path"
                     value={formData.path}
@@ -240,7 +234,7 @@ export default function ProxyRulesPage() {
               </div>
               
               <div>
-                <Label>HTTP Methods</Label>
+                <Label className="mb-2">HTTP Methods</Label>
                 <Select
                   value={formData.methods[0]}
                   onValueChange={(value) => setFormData({ ...formData, methods: [value] })}
@@ -261,7 +255,7 @@ export default function ProxyRulesPage() {
               </div>
 
               <div>
-                <Label htmlFor="forwardTarget">Forward Target (Optional)</Label>
+                <Label htmlFor="forwardTarget" className="mb-2">Forward Target (Optional)</Label>
                 <Input
                   id="forwardTarget"
                   value={formData.forwardTarget}
@@ -272,7 +266,7 @@ export default function ProxyRulesPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="priority">Priority</Label>
+                  <Label htmlFor="priority" className="mb-2">Priority</Label>
                   <Input
                     id="priority"
                     type="number"
@@ -285,7 +279,7 @@ export default function ProxyRulesPage() {
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="logging">Enable Logging</Label>
+                  <Label htmlFor="logging" className="mb-2">Enable Logging</Label>
                   <Switch
                     id="logging"
                     checked={formData.loggingEnabled}
@@ -293,7 +287,7 @@ export default function ProxyRulesPage() {
                   />
                 </div>
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="blocking">Block Requests</Label>
+                  <Label htmlFor="blocking" className="mb-2">Block Requests</Label>
                   <Switch
                     id="blocking"
                     checked={formData.isBlocked}
@@ -411,7 +405,7 @@ export default function ProxyRulesPage() {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="edit-name">Rule Name</Label>
+                <Label htmlFor="edit-name" className="mb-2">Rule Name</Label>
                 <Input
                   id="edit-name"
                   value={formData.name}
@@ -419,7 +413,7 @@ export default function ProxyRulesPage() {
                 />
               </div>
               <div>
-                <Label htmlFor="edit-path">Path Pattern</Label>
+                <Label htmlFor="edit-path" className="mb-2">Path Pattern</Label>
                 <Input
                   id="edit-path"
                   value={formData.path}
@@ -429,7 +423,7 @@ export default function ProxyRulesPage() {
             </div>
             
             <div>
-              <Label>HTTP Methods</Label>
+              <Label className="mb-2">HTTP Methods</Label>
               <Select
                 value={formData.methods[0]}
                 onValueChange={(value) => setFormData({ ...formData, methods: [value] })}
@@ -450,7 +444,7 @@ export default function ProxyRulesPage() {
             </div>
 
             <div>
-              <Label htmlFor="edit-forwardTarget">Forward Target (Optional)</Label>
+              <Label htmlFor="edit-forwardTarget" className="mb-2">Forward Target (Optional)</Label>
               <Input
                 id="edit-forwardTarget"
                 value={formData.forwardTarget}
@@ -460,7 +454,7 @@ export default function ProxyRulesPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="edit-priority">Priority</Label>
+                <Label htmlFor="edit-priority" className="mb-2">Priority</Label>
                 <Input
                   id="edit-priority"
                   type="number"
@@ -472,7 +466,7 @@ export default function ProxyRulesPage() {
 
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <Label htmlFor="edit-logging">Enable Logging</Label>
+                <Label htmlFor="edit-logging" className="mb-2">Enable Logging</Label>
                 <Switch
                   id="edit-logging"
                   checked={formData.loggingEnabled}
@@ -480,7 +474,7 @@ export default function ProxyRulesPage() {
                 />
               </div>
               <div className="flex items-center justify-between">
-                <Label htmlFor="edit-blocking">Block Requests</Label>
+                <Label htmlFor="edit-blocking" className="mb-2">Block Requests</Label>
                 <Switch
                   id="edit-blocking"
                   checked={formData.isBlocked}

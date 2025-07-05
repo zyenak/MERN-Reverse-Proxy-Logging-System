@@ -186,13 +186,7 @@ export default function UsersPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Users</h1>
-          <p className="text-muted-foreground">
-            Manage system users and their permissions
-          </p>
-        </div>
+      <div className="flex items-center justify-end">
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button>
@@ -209,7 +203,7 @@ export default function UsersPage() {
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="username" className="mb-2">Username</Label>
                 <Input
                   id="username"
                   value={formData.username}
@@ -218,7 +212,7 @@ export default function UsersPage() {
                 />
               </div>
               <div>
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email" className="mb-2">Email</Label>
                 <Input
                   id="email"
                   type="email"
@@ -228,7 +222,7 @@ export default function UsersPage() {
                 />
               </div>
               <div>
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password" className="mb-2">Password</Label>
                 <Input
                   id="password"
                   type="password"
@@ -238,7 +232,7 @@ export default function UsersPage() {
                 />
               </div>
               <div>
-                <Label htmlFor="role">Role</Label>
+                <Label htmlFor="role" className="mb-2">Role</Label>
                 <Select
                   value={formData.role}
                   onValueChange={(value: 'admin' | 'user') => setFormData({ ...formData, role: value })}
@@ -399,7 +393,7 @@ export default function UsersPage() {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="edit-username">Username</Label>
+              <Label htmlFor="edit-username" className="mb-2">Username</Label>
               <Input
                 id="edit-username"
                 value={formData.username}
@@ -407,7 +401,7 @@ export default function UsersPage() {
               />
             </div>
             <div>
-              <Label htmlFor="edit-email">Email</Label>
+              <Label htmlFor="edit-email" className="mb-2">Email</Label>
               <Input
                 id="edit-email"
                 type="email"
@@ -416,7 +410,7 @@ export default function UsersPage() {
               />
             </div>
             <div>
-              <Label htmlFor="edit-password">New Password (leave blank to keep current)</Label>
+              <Label htmlFor="edit-password" className="mb-2">New Password (leave blank to keep current)</Label>
               <Input
                 id="edit-password"
                 type="password"
@@ -426,7 +420,7 @@ export default function UsersPage() {
               />
             </div>
             <div>
-              <Label htmlFor="edit-role">Role</Label>
+              <Label htmlFor="edit-role" className="mb-2">Role</Label>
               <Select
                 value={formData.role}
                 onValueChange={(value: 'admin' | 'user') => setFormData({ ...formData, role: value })}

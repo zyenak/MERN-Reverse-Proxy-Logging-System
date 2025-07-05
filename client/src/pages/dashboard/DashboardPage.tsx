@@ -120,7 +120,6 @@ export default function DashboardPage() {
       fetchProxyStatus()
     ]);
     setLoading(false);
-    toast.success('Dashboard data refreshed');
   };
 
   useEffect(() => {
@@ -219,10 +218,10 @@ export default function DashboardPage() {
 
           {/* Main Content Tabs */}
           <Tabs defaultValue="overview" className="space-y-4">
-            <TabsList>
-              <TabsTrigger value="overview">System Overview</TabsTrigger>
-              <TabsTrigger value="users">Proxied Users</TabsTrigger>
-              <TabsTrigger value="activity">Recent Activity</TabsTrigger>
+            <TabsList className="w-full">
+              <TabsTrigger value="overview" className="flex-1">System Overview</TabsTrigger>
+              <TabsTrigger value="users" className="flex-1">Proxied Users</TabsTrigger>
+              <TabsTrigger value="activity" className="flex-1">Recent Activity</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-4">

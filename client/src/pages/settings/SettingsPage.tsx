@@ -157,13 +157,7 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-          <p className="text-muted-foreground">
-            Configure system settings and preferences
-          </p>
-        </div>
+      <div className="flex items-center justify-end">
         <div className="flex items-center gap-2">
           <Button onClick={resetSettings} variant="outline">
             Reset to Defaults
@@ -210,7 +204,7 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="targetApi">Target API URL</Label>
+                <Label htmlFor="targetApi" className="mb-2">Target API URL</Label>
                 <Input
                   id="targetApi"
                   value={settings.proxy.targetApi}
@@ -221,7 +215,7 @@ export default function SettingsPage() {
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="timeout">Request Timeout (ms)</Label>
+                  <Label htmlFor="timeout" className="mb-2">Request Timeout (ms)</Label>
                   <Input
                     id="timeout"
                     type="number"
@@ -230,7 +224,7 @@ export default function SettingsPage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="maxRetries">Max Retries</Label>
+                  <Label htmlFor="maxRetries" className="mb-2">Max Retries</Label>
                   <Input
                     id="maxRetries"
                     type="number"
@@ -242,7 +236,7 @@ export default function SettingsPage() {
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="enableCaching">Enable Response Caching</Label>
+                  <Label htmlFor="enableCaching" className="mb-2">Enable Response Caching</Label>
                   <Switch
                     id="enableCaching"
                     checked={settings.proxy.enableCaching}
@@ -251,7 +245,7 @@ export default function SettingsPage() {
                 </div>
                 {settings.proxy.enableCaching && (
                   <div>
-                    <Label htmlFor="cacheTimeout">Cache Timeout (seconds)</Label>
+                    <Label htmlFor="cacheTimeout" className="mb-2">Cache Timeout (seconds)</Label>
                     <Input
                       id="cacheTimeout"
                       type="number"
@@ -275,7 +269,7 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
-                <Label htmlFor="loggingEnabled">Enable Logging</Label>
+                <Label htmlFor="loggingEnabled" className="mb-2">Enable Logging</Label>
                 <Switch
                   id="loggingEnabled"
                   checked={settings.logging.enabled}
@@ -286,7 +280,7 @@ export default function SettingsPage() {
               {settings.logging.enabled && (
                 <>
                   <div>
-                    <Label htmlFor="logLevel">Log Level</Label>
+                    <Label htmlFor="logLevel" className="mb-2">Log Level</Label>
                     <Select
                       value={settings.logging.level}
                       onValueChange={(value: 'debug' | 'info' | 'warn' | 'error') => 
@@ -306,7 +300,7 @@ export default function SettingsPage() {
                   </div>
 
                   <div>
-                    <Label htmlFor="retentionDays">Log Retention (days)</Label>
+                    <Label htmlFor="retentionDays" className="mb-2">Log Retention (days)</Label>
                     <Input
                       id="retentionDays"
                       type="number"
@@ -319,7 +313,7 @@ export default function SettingsPage() {
 
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <Label htmlFor="requestLogging">Log Request Details</Label>
+                      <Label htmlFor="requestLogging" className="mb-2">Log Request Details</Label>
                       <Switch
                         id="requestLogging"
                         checked={settings.logging.enableRequestLogging}
@@ -327,7 +321,7 @@ export default function SettingsPage() {
                       />
                     </div>
                     <div className="flex items-center justify-between">
-                      <Label htmlFor="responseLogging">Log Response Details</Label>
+                      <Label htmlFor="responseLogging" className="mb-2">Log Response Details</Label>
                       <Switch
                         id="responseLogging"
                         checked={settings.logging.enableResponseLogging}
@@ -351,7 +345,7 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
-                <Label htmlFor="rateLimiting">Enable Rate Limiting</Label>
+                <Label htmlFor="rateLimiting" className="mb-2">Enable Rate Limiting</Label>
                 <Switch
                   id="rateLimiting"
                   checked={settings.security.enableRateLimiting}
@@ -361,7 +355,7 @@ export default function SettingsPage() {
 
               {settings.security.enableRateLimiting && (
                 <div>
-                  <Label htmlFor="maxRequests">Max Requests per Minute</Label>
+                  <Label htmlFor="maxRequests" className="mb-2">Max Requests per Minute</Label>
                   <Input
                     id="maxRequests"
                     type="number"
@@ -374,7 +368,7 @@ export default function SettingsPage() {
               <Separator />
 
               <div className="flex items-center justify-between">
-                <Label htmlFor="cors">Enable CORS</Label>
+                <Label htmlFor="cors" className="mb-2">Enable CORS</Label>
                 <Switch
                   id="cors"
                   checked={settings.security.enableCORS}
@@ -383,7 +377,7 @@ export default function SettingsPage() {
               </div>
 
               <div className="flex items-center justify-between">
-                <Label htmlFor="jwtValidation">Enable JWT Validation</Label>
+                <Label htmlFor="jwtValidation" className="mb-2">Enable JWT Validation</Label>
                 <Switch
                   id="jwtValidation"
                   checked={settings.security.enableJWTValidation}
@@ -392,7 +386,7 @@ export default function SettingsPage() {
               </div>
 
               <div>
-                <Label htmlFor="sessionTimeout">Session Timeout (seconds)</Label>
+                <Label htmlFor="sessionTimeout" className="mb-2">Session Timeout (seconds)</Label>
                 <Input
                   id="sessionTimeout"
                   type="number"
@@ -414,7 +408,7 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
-                <Label htmlFor="compression">Enable Compression</Label>
+                <Label htmlFor="compression" className="mb-2">Enable Compression</Label>
                 <Switch
                   id="compression"
                   checked={settings.performance.enableCompression}
@@ -423,7 +417,7 @@ export default function SettingsPage() {
               </div>
 
               <div className="flex items-center justify-between">
-                <Label htmlFor="gzip">Enable Gzip</Label>
+                <Label htmlFor="gzip" className="mb-2">Enable Gzip</Label>
                 <Switch
                   id="gzip"
                   checked={settings.performance.enableGzip}
@@ -432,7 +426,7 @@ export default function SettingsPage() {
               </div>
 
               <div>
-                <Label htmlFor="maxPayload">Max Payload Size (bytes)</Label>
+                <Label htmlFor="maxPayload" className="mb-2">Max Payload Size (bytes)</Label>
                 <Input
                   id="maxPayload"
                   type="number"
@@ -444,7 +438,7 @@ export default function SettingsPage() {
               <Separator />
 
               <div className="flex items-center justify-between">
-                <Label htmlFor="keepAlive">Enable Keep-Alive</Label>
+                <Label htmlFor="keepAlive" className="mb-2">Enable Keep-Alive</Label>
                 <Switch
                   id="keepAlive"
                   checked={settings.performance.enableKeepAlive}
@@ -454,7 +448,7 @@ export default function SettingsPage() {
 
               {settings.performance.enableKeepAlive && (
                 <div>
-                  <Label htmlFor="keepAliveTimeout">Keep-Alive Timeout (ms)</Label>
+                  <Label htmlFor="keepAliveTimeout" className="mb-2">Keep-Alive Timeout (ms)</Label>
                   <Input
                     id="keepAliveTimeout"
                     type="number"

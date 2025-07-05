@@ -25,15 +25,15 @@ A comprehensive reverse proxy system with advanced logging, rule-based request f
 ## 🛠️ Installation
 
 1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
+```bash
+git clone <repository-url>
    cd server
-   ```
+```
 
 2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+```bash
+npm install
+```
 
 3. **Environment Setup**
    Create a `.env` file:
@@ -46,14 +46,14 @@ A comprehensive reverse proxy system with advanced logging, rule-based request f
    ```
 
 4. **Database Migration**
-   ```bash
+```bash
    npm run migrate
    ```
 
 5. **Create Admin User**
-   ```bash
-   npm run create-admin
-   ```
+```bash
+npm run create-admin
+```
 
 ## 🚀 Usage
 
@@ -220,4 +220,4 @@ This will:
 
 ## 📄 License
 
-This project is licensed under the MIT License. 
+This project is licensed under the MIT License.

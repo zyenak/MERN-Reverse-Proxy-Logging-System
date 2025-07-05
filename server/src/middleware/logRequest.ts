@@ -10,9 +10,9 @@ export const logRequest = async (req: AuthRequest, res: Response, next: NextFunc
   const url = req.originalUrl;
 
   try {
-    // Check proxy rules using service
-    const isAllowed = await proxyRuleService.isRequestAllowed(url);
-    if (!isAllowed) {
+    // Check if request should be logged using new service method
+    const shouldLog = await proxyRuleService.shouldLogRequest(url, method);
+    if (!shouldLog) {
       next();
       return;
     }

@@ -18,6 +18,7 @@ class ApiClient {
     this.api.interceptors.request.use(
       (config) => {
         const token = localStorage.getItem('token');
+        console.log('API Request:', config.url, 'Token:', token ? 'Present' : 'Missing');
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
@@ -32,6 +33,7 @@ class ApiClient {
     this.api.interceptors.response.use(
       (response: AxiosResponse) => response,
       (error) => {
+        console.log('API Error:', error.response?.status, error.config?.url, error.response?.data);
         // Only redirect on 401 for authenticated requests, not for login/register
         if (error.response?.status === 401 && !error.config.url?.includes('/auth/login') && !error.config.url?.includes('/auth/register')) {
           localStorage.removeItem('token');

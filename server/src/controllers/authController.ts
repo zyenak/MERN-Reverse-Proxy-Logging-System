@@ -68,7 +68,10 @@ export const login = async (req: Request, res: Response) => {
     const token = jwt.sign(
       { id: user._id, username: user.username, role: user.role }, 
       JWT_SECRET, 
-      { expiresIn: '1d' }
+      { 
+        expiresIn: '1d',
+        issuer: 'mern-reverse-proxy'
+      }
     );
     
     console.log('Token created successfully');

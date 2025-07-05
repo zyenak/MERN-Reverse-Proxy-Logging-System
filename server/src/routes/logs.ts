@@ -5,7 +5,8 @@ import {
   getLogById, 
   deleteLog, 
   deleteLogs, 
-  getLogStats 
+  getLogStats,
+  exportLogs
 } from '@/controllers/logController';
 import asyncHandler from '@/utils/asyncHandler';
 
@@ -16,6 +17,9 @@ router.get('/', authenticate as RequestHandler, asyncHandler(getLogs));
 
 // Get log statistics - must come before /:id route
 router.get('/stats', authenticate as RequestHandler, asyncHandler(getLogStats));
+
+// Export logs
+router.get('/export', authenticate as RequestHandler, asyncHandler(exportLogs));
 
 // Get specific log by ID
 router.get('/:id', authenticate as RequestHandler, asyncHandler(getLogById));

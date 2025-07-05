@@ -5,14 +5,9 @@ export const getLogs = async (req: Request, res: Response) => {
   try {
     const { 
       method, 
-      url, 
-      user, 
       status, 
-      from, 
-      to, 
+      date,
       search, 
-      isProxied,
-      proxyRuleId,
       page = 1, 
       limit = 20 
     } = req.query;
@@ -20,22 +15,37 @@ export const getLogs = async (req: Request, res: Response) => {
     const query: any = {};
     
     if (method) query.method = method;
-    if (url) query.url = { $regex: url, $options: 'i' };
-    if (user) query.user = user;
-    if (status) query.status = status;
-    if (isProxied !== undefined) query.isProxied = isProxied === 'true';
-    if (proxyRuleId) query.proxyRuleId = proxyRuleId;
+    if (status) query.status = parseInt(status as string);
     
-    if (from || to) query.timestamp = {};
-    if (from) query.timestamp.$gte = new Date(from as string);
-    if (to) query.timestamp.$lte = new Date(to as string);
+    // Handle date filtering
+    if (date) {
+      const now = new Date();
+      switch (date) {
+        case 'today':
+          const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          query.timestamp = { $gte: today };
+          break;
+        case 'yesterday':
+          const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+          const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          query.timestamp = { $gte: yesterday, $lt: todayStart };
+          break;
+        case 'week':
+          const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          query.timestamp = { $gte: weekAgo };
+          break;
+        case 'month':
+          const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+          query.timestamp = { $gte: monthAgo };
+          break;
+      }
+    }
     
     if (search) {
       query.$or = [
         { method: { $regex: search, $options: 'i' } },
         { url: { $regex: search, $options: 'i' } },
-        { user: { $regex: search, $options: 'i' } },
-        { targetUrl: { $regex: search, $options: 'i' } }
+        { user: { $regex: search, $options: 'i' } }
       ];
     }
     
@@ -45,16 +55,14 @@ export const getLogs = async (req: Request, res: Response) => {
       .skip((+page - 1) * +limit)
       .limit(+limit);
       
-    const count = await Log.countDocuments(query);
+    const total = await Log.countDocuments(query);
     
     res.json({ 
       logs, 
-      count,
-      pagination: {
-        page: +page,
-        limit: +limit,
-        totalPages: Math.ceil(count / +limit)
-      }
+      total,
+      page: +page,
+      limit: +limit,
+      totalPages: Math.ceil(total / +limit)
     });
   } catch (error) {
     res.status(500).json({ message: 'Error fetching logs', error });
@@ -93,17 +101,7 @@ export const deleteLog = async (req: Request, res: Response) => {
 
 export const deleteLogs = async (req: Request, res: Response) => {
   try {
-    const { from, to, method, isProxied } = req.query;
-    const query: any = {};
-    
-    if (method) query.method = method;
-    if (isProxied !== undefined) query.isProxied = isProxied === 'true';
-    
-    if (from || to) query.timestamp = {};
-    if (from) query.timestamp.$gte = new Date(from as string);
-    if (to) query.timestamp.$lte = new Date(to as string);
-    
-    const result = await Log.deleteMany(query);
+    const result = await Log.deleteMany({});
     
     res.json({ 
       message: `${result.deletedCount} logs deleted successfully`,
@@ -116,46 +114,71 @@ export const deleteLogs = async (req: Request, res: Response) => {
 
 export const getLogStats = async (req: Request, res: Response) => {
   try {
-    const { from, to } = req.query;
-    const query: any = {};
-    
-    if (from || to) query.timestamp = {};
-    if (from) query.timestamp.$gte = new Date(from as string);
-    if (to) query.timestamp.$lte = new Date(to as string);
-    
     const [
-      totalLogs,
-      proxiedLogs,
-      methodStats,
-      statusStats,
-      avgResponseTime
+      totalRequests,
+      successfulRequests,
+      failedRequests,
+      avgResponseTime,
+      recentActivity
     ] = await Promise.all([
-      Log.countDocuments(query),
-      Log.countDocuments({ ...query, isProxied: true }),
+      Log.countDocuments({ isProxied: true }),
+      Log.countDocuments({ isProxied: true, status: { $gte: 200, $lt: 300 } }),
+      Log.countDocuments({ isProxied: true, status: { $gte: 400 } }),
       Log.aggregate([
-        { $match: query },
-        { $group: { _id: '$method', count: { $sum: 1 } } },
-        { $sort: { count: -1 } }
-      ]),
-      Log.aggregate([
-        { $match: query },
-        { $group: { _id: '$status', count: { $sum: 1 } } },
-        { $sort: { count: -1 } }
-      ]),
-      Log.aggregate([
-        { $match: query },
+        { $match: { isProxied: true } },
         { $group: { _id: null, avgResponseTime: { $avg: '$responseTime' } } }
-      ])
+      ]),
+      Log.find({ isProxied: true })
+        .sort({ timestamp: -1 })
+        .limit(10)
+        .select('method url status timestamp responseTime')
     ]);
     
     res.json({
-      totalLogs,
-      proxiedLogs,
-      methodStats,
-      statusStats,
-      avgResponseTime: avgResponseTime[0]?.avgResponseTime || 0
+      totalRequests,
+      successfulRequests,
+      failedRequests,
+      averageResponseTime: avgResponseTime[0]?.avgResponseTime || 0,
+      activeProxyRules: 0, // Will be updated when proxy rules are implemented
+      totalUsers: 0, // Will be updated when user management is implemented
+      recentActivity: recentActivity.map((log) => ({
+        id: log._id?.toString() || '',
+        method: log.method,
+        url: log.url,
+        status: log.status,
+        timestamp: log.timestamp.toISOString(),
+        responseTime: log.responseTime
+      }))
     });
   } catch (error) {
     res.status(500).json({ message: 'Error fetching log stats', error });
+  }
+};
+
+export const exportLogs = async (req: Request, res: Response) => {
+  try {
+    const logs = await Log.find({ isProxied: true })
+      .populate('proxyRuleId', 'name path methods')
+      .sort({ timestamp: -1 });
+
+    const exportData = logs.map(log => ({
+      id: log._id,
+      method: log.method,
+      url: log.url,
+      timestamp: log.timestamp,
+      status: log.status,
+      user: log.user,
+      responseTime: log.responseTime,
+      targetUrl: log.targetUrl,
+      isProxied: log.isProxied,
+      proxyRule: log.proxyRuleId,
+      meta: log.meta
+    }));
+
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename=logs-${new Date().toISOString().split('T')[0]}.json`);
+    res.json(exportData);
+  } catch (error) {
+    res.status(500).json({ message: 'Error exporting logs', error });
   }
 };

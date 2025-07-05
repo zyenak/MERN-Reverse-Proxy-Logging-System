@@ -54,10 +54,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       const response = await authService.login({ username, password });
       
+      console.log('Login response:', response);
+      
       // Store auth data
       authService.setAuthData(response.token, response.user);
       updateToken(response.token);
       updateUser(response.user);
+      
+      console.log('Token stored:', localStorage.getItem('token'));
+      console.log('User stored:', localStorage.getItem('user'));
     } catch (error: any) {
       setError(error.message || 'Login failed');
       throw error;
@@ -67,6 +72,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const updateToken = useCallback((newToken: string | null) => {
+    console.log('Updating token:', newToken ? 'Present' : 'Null');
     setToken(newToken);
     if (newToken) {
       localStorage.setItem('token', newToken);

@@ -77,18 +77,58 @@ const AppRoutes: React.FC = () => {
       
       {/* Protected Routes - Single MainLayout for all authenticated routes */}
       <Route
-        path="/"
+        path="/dashboard"
         element={
           <ProtectedRoute>
             <MainLayout />
           </ProtectedRoute>
         }
       >
-        <Route path="dashboard" element={<DashboardPage />} />
-        <Route path="logs" element={<LogsPage />} />
-        <Route path="settings" element={<SettingsPage />} />
-        <Route path="proxy-rules" element={<AdminRouteWrapper><ProxyRulesPage /></AdminRouteWrapper>} />
-        <Route path="users" element={<AdminRouteWrapper><UsersPage /></AdminRouteWrapper>} />
+        <Route index element={<DashboardPage />} />
+      </Route>
+
+      <Route
+        path="/logs"
+        element={
+          <ProtectedRoute>
+            <MainLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<LogsPage />} />
+      </Route>
+
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <MainLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<SettingsPage />} />
+      </Route>
+
+      <Route
+        path="/proxy-rules"
+        element={
+          <ProtectedRoute>
+            <MainLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<AdminRouteWrapper><ProxyRulesPage /></AdminRouteWrapper>} />
+      </Route>
+
+      <Route
+        path="/users"
+        element={
+          <ProtectedRoute>
+            <MainLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<AdminRouteWrapper><UsersPage /></AdminRouteWrapper>} />
       </Route>
 
       {/* Catch all route */}

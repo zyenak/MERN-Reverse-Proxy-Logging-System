@@ -7,6 +7,7 @@ import proxyRouter from '@/routes/proxy';
 import logsRouter from '@/routes/logs';
 import usersRouter from '@/routes/users';
 import proxyRuleRouter from '@/routes/proxyRule';
+import settingsRouter from '@/routes/settings';
 import { errorHandler, notFound } from '@/middleware/errorHandler';
 import { 
   authRateLimit, 
@@ -59,6 +60,7 @@ app.use('/api/proxy', proxyRouter);
 app.use('/api/logs', logsRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/proxy-rule', proxyRuleRouter);
+app.use('/api/settings', settingsRouter);
 
 // Health check endpoint
 app.get('/health', (_, res) => {
@@ -79,7 +81,8 @@ app.get('/', (_, res) => {
       proxy: '/api/proxy',
       logs: '/api/logs',
       users: '/api/users',
-      proxyRules: '/api/proxy-rule'
+      proxyRules: '/api/proxy-rule',
+      settings: '/api/settings'
     }
   });
 });

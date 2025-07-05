@@ -98,9 +98,25 @@ export class ProxyRuleService {
     try {
       const rules = await this.getAllRules();
       
+      // Extract path from URL - handle both full URLs and paths
+      let pathname: string;
+      try {
+        // If it's a full URL, extract the path
+        if (url.startsWith('http://') || url.startsWith('https://')) {
+          pathname = new URL(url).pathname;
+        } else {
+          // If it's already a path, use it directly
+          pathname = url;
+        }
+      } catch {
+        // Fallback to treating as path
+        pathname = url;
+      }
+      
       // Find the first matching rule (highest priority first)
       const matchingRule = rules.find(rule => {
-        const pathMatches = url.includes(rule.path) || url.startsWith(rule.path);
+        // Simple startsWith matching for paths
+        const pathMatches = pathname.startsWith(rule.path);
         const methodMatches = rule.methods.includes(method.toUpperCase());
         return pathMatches && methodMatches;
       });

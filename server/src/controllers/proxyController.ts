@@ -12,10 +12,17 @@ export const handleProxy = async (req: AuthRequest, res: Response): Promise<void
   const originalUrl = req.originalUrl;
   const method = req.method.toUpperCase();
   
-  // Get the path from the route parameter and construct target URL
-  const path = req.params.path || '';
-  const targetPath = path.startsWith('/') ? path : `/${path}`;
-  const targetUrl = `${TARGET_API}${targetPath}`;
+  // Extract actual path from proxy route - handle both parameter and direct path
+  let actualPath: string;
+  if (req.params.path) {
+    // If using parameter-based routing
+    actualPath = req.params.path.startsWith('/') ? req.params.path : `/${req.params.path}`;
+  } else {
+    // If using direct path replacement
+    actualPath = originalUrl.replace('/api/proxy', '');
+  }
+  
+  const targetUrl = `${TARGET_API}${actualPath}`;
   
   try {
     // Check if request should be blocked

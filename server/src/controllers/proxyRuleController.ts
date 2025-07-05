@@ -34,6 +34,12 @@ export const getProxyRuleById = async (req: Request, res: Response) => {
 export const createProxyRule = async (req: Request, res: Response) => {
   try {
     const ruleData: CreateProxyRuleInput = req.body;
+    
+    // Validate path format
+    if (!ruleData.path.startsWith('/')) {
+      return res.status(400).json({ message: 'Path must start with /' });
+    }
+    
     const rule = await proxyRuleService.createRule(ruleData);
     logger.info('Proxy rule created successfully', { ruleId: rule._id });
     res.status(201).json(rule);

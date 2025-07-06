@@ -8,8 +8,8 @@ export interface BaseEntity {
 // User Types
 export interface User extends BaseEntity {
   username: string;
+  email: string;
   role: UserRole;
-  email?: string;
 }
 
 export type UserRole = 'admin' | 'user';
@@ -22,6 +22,7 @@ export interface LoginCredentials {
 
 export interface RegisterCredentials {
   username: string;
+  email: string;
   password: string;
   role?: UserRole;
 }
@@ -38,6 +39,7 @@ export interface Log extends BaseEntity {
   timestamp: string;
   status: number;
   user?: string;
+  requestedBy?: string;
   responseTime: number;
   proxyRuleId?: string;
   targetUrl?: string;
@@ -165,7 +167,7 @@ export interface PaginatedResponse<T> {
 }
 
 export interface PaginatedData<T> {
-  [key: string]: T[];
+  [key: string]: T[] | number;
   total: number;
 }
 

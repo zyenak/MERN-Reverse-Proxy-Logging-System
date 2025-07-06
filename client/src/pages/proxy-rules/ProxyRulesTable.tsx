@@ -145,10 +145,13 @@ export default function ProxyRulesTable({ search, isCreateDialogOpen, onCreateDi
 
   const createRule = async () => {
     try {
-      // Prepare the request data, excluding empty forwardTarget
+      // Prepare the request data, mapping client fields to server fields
       const requestData = {
-        ...formData,
-        forwardTarget: formData.forwardTarget?.trim() || undefined
+        name: formData.name.trim(),
+        pattern: formData.path.trim(), // Map 'path' to 'pattern'
+        forwardTarget: formData.forwardTarget?.trim() || undefined,
+        isBlocking: formData.isBlocked, // Map 'isBlocked' to 'isBlocking'
+        priority: formData.priority
       };
       
       await apiClient.post('/proxy-rule', requestData);
@@ -164,7 +167,18 @@ export default function ProxyRulesTable({ search, isCreateDialogOpen, onCreateDi
 
   const updateRule = async (ruleId: string, updates: Partial<ProxyRule>) => {
     try {
-      await apiClient.put(`/proxy-rule/${ruleId}`, updates);
+      // Map client field names to server field names
+      const serverUpdates: any = {};
+      
+      if ('name' in updates) serverUpdates.name = updates.name;
+      if ('path' in updates) serverUpdates.pattern = updates.path; // Map 'path' to 'pattern'
+      if ('forwardTarget' in updates) serverUpdates.forwardTarget = updates.forwardTarget;
+      if ('isBlocked' in updates) serverUpdates.isBlocking = updates.isBlocked; // Map 'isBlocked' to 'isBlocking'
+      if ('priority' in updates) serverUpdates.priority = updates.priority;
+      if ('enabled' in updates) serverUpdates.isEnabled = updates.enabled; // Map 'enabled' to 'isEnabled'
+      if ('loggingEnabled' in updates) serverUpdates.loggingEnabled = updates.loggingEnabled; // Direct mapping
+      
+      await apiClient.put(`/proxy-rule/${ruleId}`, serverUpdates);
       toast.success('Proxy rule updated successfully');
       fetchRules();
     } catch (error: any) {
@@ -193,7 +207,7 @@ export default function ProxyRulesTable({ search, isCreateDialogOpen, onCreateDi
   };
 
   const toggleBlocking = async (ruleId: string, isBlocked: boolean) => {
-    await updateRule(ruleId, { isBlocked });
+    await updateRule(ruleId, { isBlocked }); // Use client field name, updateRule will map it
   };
 
   const resetForm = () => {
@@ -225,10 +239,13 @@ export default function ProxyRulesTable({ search, isCreateDialogOpen, onCreateDi
     if (!editingRule) return;
 
     try {
-      // Prepare the request data, excluding empty forwardTarget
+      // Prepare the request data, mapping client fields to server fields
       const requestData = {
-        ...formData,
-        forwardTarget: formData.forwardTarget?.trim() || undefined
+        name: formData.name,
+        pattern: formData.path, // Map 'path' to 'pattern'
+        forwardTarget: formData.forwardTarget?.trim() || undefined,
+        isBlocking: formData.isBlocked, // Map 'isBlocked' to 'isBlocking'
+        priority: formData.priority
       };
       
       await apiClient.put(`/proxy-rule/${editingRule._id}`, requestData);

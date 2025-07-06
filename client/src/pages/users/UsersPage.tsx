@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,7 @@ import apiClient from '@/services/apiClient';
 export default function UsersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -32,7 +33,7 @@ export default function UsersPage() {
       formData.password.length < 8 ||
       !/\S+@\S+\.\S+/.test(formData.email)
     ) {
-      toast.error('Please fill all fields with valid values (password ≥ 8 chars, valid email).');
+      toast.error('Please fill all required fields with valid values (password ≥ 8 chars, valid email).');
       return;
     }
     try {
@@ -41,8 +42,9 @@ export default function UsersPage() {
       toast.success('User created successfully');
       setIsCreateDialogOpen(false);
       resetForm();
-      // Refresh the table by triggering a re-render
-      window.location.reload();
+      // Trigger table refresh by incrementing the refresh trigger
+      // This will cause the table to refetch data and reset to page 1
+      setRefreshTrigger(prev => prev + 1);
     } catch (error: any) {
       console.error('Error creating user:', error);
       const backendMsg = error?.response?.data?.message;
@@ -163,7 +165,7 @@ export default function UsersPage() {
         </CardContent>
       </Card>
       {/* Table only reloads on search/page change */}
-      <UsersTable search={debouncedSearch} />
+      <UsersTable search={debouncedSearch} refreshTrigger={refreshTrigger} />
     </div>
   );
 } 

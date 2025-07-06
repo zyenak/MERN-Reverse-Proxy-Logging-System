@@ -9,21 +9,27 @@ import { LoginRequest, RegisterRequest } from '@/types';
 
 export const register = async (req: Request, res: Response) => {
   try {
-    let { email, password, role }: RegisterRequest = req.body;
+    let { username, email, password, role }: RegisterRequest = req.body;
     
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
+    const existingUserByEmail = await User.findOne({ email });
+    if (existingUserByEmail) {
       logger.warn('Registration attempt with existing email', { email });
       return res.status(409).json({ message: 'Email already exists.' });
+    }
+    
+    const existingUserByUsername = await User.findOne({ username });
+    if (existingUserByUsername) {
+      logger.warn('Registration attempt with existing username', { username });
+      return res.status(409).json({ message: 'Username already exists.' });
     }
     
     const hashedPassword = await bcrypt.hash(password, 10);
     // Default to 'user' if role is not provided
     if (!role) role = 'user';
-    const user = new User({ email, password: hashedPassword, role });
+    const user = new User({ username, email, password: hashedPassword, role });
     await user.save();
     
-    logger.info('User registered successfully', { email, role });
+    logger.info('User registered successfully', { username, email, role });
     res.status(201).json({ message: 'User registered successfully.' });
   } catch (error) {
     logger.error('Error in user registration:', error);
@@ -33,19 +39,19 @@ export const register = async (req: Request, res: Response) => {
 
 export const login = async (req: Request, res: Response) => {
   try {
-    const { email, password }: LoginRequest = req.body;
+    const { username, password }: LoginRequest = req.body;
     
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ username });
     
     if (!user) {
-      logger.warn('Login attempt with non-existent email', { email });
+      logger.warn('Login attempt with non-existent username', { username });
       return res.status(401).json({ message: 'Invalid credentials.' });
     }
     
     const isMatch = await bcrypt.compare(password, user.password);
     
     if (!isMatch) {
-      logger.warn('Login attempt with invalid password', { email });
+      logger.warn('Login attempt with invalid password', { username });
       return res.status(401).json({ message: 'Invalid credentials.' });
     }
     
@@ -56,7 +62,7 @@ export const login = async (req: Request, res: Response) => {
     }
     
     const token = jwt.sign(
-      { id: user._id, email: user.email, role: user.role }, 
+      { id: user._id, username: user.username, email: user.email, role: user.role }, 
       JWT_SECRET, 
       { 
         expiresIn: '1d',
@@ -64,8 +70,8 @@ export const login = async (req: Request, res: Response) => {
       }
     );
     
-    logger.info('User logged in successfully', { email, role: user.role });
-    res.json({ token, user: { id: user._id, email: user.email, role: user.role } });
+    logger.info('User logged in successfully', { username, email: user.email, role: user.role });
+    res.json({ token, user: { id: user._id, username: user.username, email: user.email, role: user.role } });
   } catch (error) {
     logger.error('Error in user login:', error);
     res.status(500).json({ message: 'Server error', error });

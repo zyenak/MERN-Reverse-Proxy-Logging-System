@@ -6,20 +6,23 @@ import { ERROR_MESSAGES, HTTP_STATUS } from '@/constants';
 // Validation schemas
 const validationSchemas = {
   login: {
-    email: { required: true, type: 'email' },
+    username: { required: true, type: 'string', minLength: 1 },
     password: { required: true, type: 'string', minLength: 1 }
   },
   register: {
+    username: { required: true, type: 'string', minLength: 1 },
     email: { required: true, type: 'email' },
     password: { required: true, type: 'password', minLength: 6 },
     role: { required: false, type: 'enum', values: ['admin', 'user'] }
   },
   createUser: {
+    username: { required: true, type: 'string', minLength: 1 },
     email: { required: true, type: 'email' },
     password: { required: true, type: 'password', minLength: 6 },
     role: { required: true, type: 'enum', values: ['admin', 'user'] }
   },
   updateUser: {
+    username: { required: false, type: 'string', minLength: 1 },
     email: { required: false, type: 'email' },
     password: { required: false, type: 'password', minLength: 6 },
     role: { required: false, type: 'enum', values: ['admin', 'user'] },
@@ -30,7 +33,7 @@ const validationSchemas = {
     pattern: { required: true, type: 'string', minLength: 1 },
     forwardTarget: { required: false, type: 'url' },
     isBlocking: { required: true, type: 'boolean' },
-    priority: { required: false, type: 'number', min: 1, max: 1000 }
+    priority: { required: false, type: 'number', min: 0, max: 1000 }
   },
   updateProxyRule: {
     name: { required: false, type: 'string', minLength: 1, maxLength: 100 },
@@ -38,7 +41,8 @@ const validationSchemas = {
     forwardTarget: { required: false, type: 'url' },
     isBlocking: { required: false, type: 'boolean' },
     isEnabled: { required: false, type: 'boolean' },
-    priority: { required: false, type: 'number', min: 1, max: 1000 }
+    loggingEnabled: { required: false, type: 'boolean' },
+    priority: { required: false, type: 'number', min: 0, max: 1000 }
   },
   pagination: {
     page: { required: false, type: 'number', min: 1 },

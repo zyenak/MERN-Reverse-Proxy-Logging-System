@@ -88,7 +88,11 @@ export function AppSidebar({ user, onLogout, ...props }: AppSidebarProps) {
       </SidebarContent>
       <SidebarFooter>
         {user && (
-          <NavUser user={{ name: user.username, email: user.username, avatar: "" }} onLogout={onLogout} />
+          <NavUser user={{ 
+            name: `${user.username}`, 
+            email: user.email, 
+            avatar: "" 
+          }} onLogout={onLogout} />
         )}
       </SidebarFooter>
     </Sidebar>

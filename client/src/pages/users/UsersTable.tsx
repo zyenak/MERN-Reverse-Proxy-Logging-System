@@ -19,9 +19,10 @@ interface User {
 
 interface UsersTableProps {
     search: string;
+    refreshTrigger?: number;
 }
 
-export default function UsersTable({ search }: UsersTableProps) {
+export default function UsersTable({ search, refreshTrigger = 0 }: UsersTableProps) {
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [total, setTotal] = useState(0);
@@ -53,7 +54,7 @@ export default function UsersTable({ search }: UsersTableProps) {
     useEffect(() => {
         fetchUsers();
         // eslint-disable-next-line
-    }, [page, limit, search]);
+    }, [page, limit, search, refreshTrigger]);
 
     const getRoleColor = (role: string) => {
         return role === 'admin' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800';

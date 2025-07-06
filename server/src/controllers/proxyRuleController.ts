@@ -44,7 +44,19 @@ export const createProxyRule = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Pattern must start with /' });
     }
     
-    const rule = await proxyRuleService.createRule(ruleData);
+    // Map validation interface fields to Mongoose model fields
+    const mongooseRuleData = {
+      name: ruleData.name,
+      path: ruleData.pattern, // Map 'pattern' to 'path'
+      methods: ['GET', 'POST', 'PUT', 'DELETE'], // Default methods
+      loggingEnabled: true, // Default to true
+      isBlocked: ruleData.isBlocking, // Map 'isBlocking' to 'isBlocked'
+      forwardTarget: ruleData.forwardTarget,
+      priority: ruleData.priority || 0,
+      enabled: true // Default to enabled
+    };
+    
+    const rule = await proxyRuleService.createRule(mongooseRuleData);
     logger.info('Proxy rule created successfully', { ruleId: rule._id });
     res.status(201).json(rule);
   } catch (error) {
@@ -57,7 +69,19 @@ export const updateProxyRule = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const updates: UpdateProxyRuleRequest = req.body;
-    const rule = await proxyRuleService.updateRule(id, updates);
+    
+    // Map validation interface fields to Mongoose model fields
+    const mongooseUpdates: any = {};
+    
+    if (updates.name !== undefined) mongooseUpdates.name = updates.name;
+    if (updates.pattern !== undefined) mongooseUpdates.path = updates.pattern; // Map 'pattern' to 'path'
+    if (updates.forwardTarget !== undefined) mongooseUpdates.forwardTarget = updates.forwardTarget;
+    if (updates.isBlocking !== undefined) mongooseUpdates.isBlocked = updates.isBlocking; // Map 'isBlocking' to 'isBlocked'
+    if (updates.isEnabled !== undefined) mongooseUpdates.enabled = updates.isEnabled; // Map 'isEnabled' to 'enabled'
+    if (updates.loggingEnabled !== undefined) mongooseUpdates.loggingEnabled = updates.loggingEnabled; // Direct mapping
+    if (updates.priority !== undefined) mongooseUpdates.priority = updates.priority;
+    
+    const rule = await proxyRuleService.updateRule(id, mongooseUpdates);
     
     if (!rule) {
       return res.status(404).json({ message: 'Proxy rule not found' });

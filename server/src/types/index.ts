@@ -8,6 +8,7 @@ export interface AuthRequest extends Request {
 // JWT Payload interface
 export interface JwtPayload {
   id: string;
+  username: string;
   email: string;
   role: 'admin' | 'user';
   iat?: number;
@@ -18,6 +19,7 @@ export interface JwtPayload {
 // User interface
 export interface User {
   _id?: string;
+  username: string;
   email: string;
   password: string;
   role: 'admin' | 'user';
@@ -130,23 +132,26 @@ export interface ProxyRuleFilters {
 
 // Request/Response interfaces for API endpoints
 export interface LoginRequest {
-  email: string;
+  username: string;
   password: string;
 }
 
 export interface RegisterRequest {
+  username: string;
   email: string;
   password: string;
   role?: 'admin' | 'user';
 }
 
 export interface CreateUserRequest {
+  username: string;
   email: string;
   password: string;
   role: 'admin' | 'user';
 }
 
 export interface UpdateUserRequest {
+  username?: string;
   email?: string;
   password?: string;
   role?: 'admin' | 'user';
@@ -167,6 +172,7 @@ export interface UpdateProxyRuleRequest {
   forwardTarget?: string;
   isBlocking?: boolean;
   isEnabled?: boolean;
+  loggingEnabled?: boolean;
   priority?: number;
 }
 

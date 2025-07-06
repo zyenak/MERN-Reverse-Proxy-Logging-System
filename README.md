@@ -72,7 +72,7 @@ A full-stack TypeScript-based web application using the MERN stack (MongoDB, Exp
 ### 1. Clone the Repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/zyenak/MERN-Reverse-Proxy-Logging-System.git
 cd MERN-Reverse-Proxy-Logging-System
 ```
 
@@ -88,7 +88,6 @@ Create a `.env` file in the server directory:
 ```env
 NODE_ENV=development
 PORT=5000
-MONGODB_URI=mongodb://localhost:27017/reverse-proxy-logger
 MONGO_URI=mongodb://localhost:27017/reverse-proxy-logger
 JWT_SECRET=your-super-secret-jwt-key-here
 CLIENT_URL=http://localhost:5173
@@ -239,19 +238,6 @@ This will create:
 - `PUT /api/settings` - Update system settings
 - `POST /api/settings/reset` - Reset to defaults
 
-## 🧪 Testing
-
-### Backend Tests
-```bash
-cd server
-npm test
-```
-
-### Frontend Tests
-```bash
-cd client
-npm test
-```
 
 ## 📁 Project Structure
 
@@ -296,7 +282,6 @@ Make sure to set the following environment variables in production:
 ```env
 NODE_ENV=production
 PORT=5000
-MONGODB_URI=your-production-mongodb-uri
 MONGO_URI=your-production-mongodb-uri
 JWT_SECRET=your-production-jwt-secret
 CLIENT_URL=your-production-client-url

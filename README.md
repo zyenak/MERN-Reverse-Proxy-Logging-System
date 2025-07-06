@@ -44,27 +44,28 @@ A full-stack TypeScript-based web application using the MERN stack (MongoDB, Exp
 ## 🛠️ Tech Stack
 
 ### Backend
-- **Node.js** with **Express.js** framework
-- **TypeScript** for type safety
-- **MongoDB** with **Mongoose** ODM
+- **Node.js** with **Express.js 5.1.0** framework
+- **TypeScript 5.8.3** for type safety
+- **MongoDB** with **Mongoose 8.16.1** ODM
 - **JWT** for authentication
-- **Axios** for HTTP requests
-- **Jest** for testing
+- **Axios 1.10.0** for HTTP requests
+- **Jest 29.7.0** for testing
 
 ### Frontend
-- **React 18** with **TypeScript**
-- **Vite** for fast development and building
+- **React 19.1.0** with **TypeScript 5.8.3**
+- **Vite 7.0.0** for fast development and building
 - **shadcn/ui** for beautiful, accessible components
-- **Tailwind CSS** for styling
-- **React Router v6** for navigation
-- **Lucide React** for icons
-- **Sonner** for toast notifications
+- **Tailwind CSS 4.1.11** for styling
+- **React Router v7.6.3** for navigation
+- **Lucide React 0.525.0** for icons
+- **Sonner 2.0.6** for toast notifications
 
 ## 📋 Prerequisites
 
-- Node.js (v18 or higher)
-- MongoDB (v5 or higher)
-- npm or yarn package manager
+- **Node.js** (v18 or higher)
+- **MongoDB** (v5 or higher)
+- **Git** (for cloning the repository)
+- **npm** or **yarn** package manager
 
 ## 🚀 Installation & Setup
 
@@ -88,9 +89,17 @@ Create a `.env` file in the server directory:
 NODE_ENV=development
 PORT=5000
 MONGODB_URI=mongodb://localhost:27017/reverse-proxy-logger
+MONGO_URI=mongodb://localhost:27017/reverse-proxy-logger
 JWT_SECRET=your-super-secret-jwt-key-here
 CLIENT_URL=http://localhost:5173
+
+# Admin user credentials (REQUIRED)
+ADMIN_PASSWORD=your-secure-admin-password
+ADMIN_USERNAME=admin
+ADMIN_EMAIL=admin@example.com
 ```
+
+**Important**: The `ADMIN_PASSWORD` environment variable is **required** for creating the admin user.
 
 ### 3. Frontend Setup
 
@@ -109,12 +118,17 @@ Run the admin creation script:
 
 ```bash
 cd server
-npm run create-admin
+npm run create-mock-users
 ```
 
-This will create a default admin user:
-- Username: `admin`
-- Password: `admin123`
+This will create:
+- **Admin user**: Username from `ADMIN_USERNAME` (defaults to 'admin'), Password from `ADMIN_PASSWORD`
+- **Mock user**: Username: `mockuser`, Password: `mockpassword123`
+
+**Security Warning**: 
+- Change the default passwords after first login
+- Use strong, unique passwords in production
+- Consider deleting the script after setup
 
 ## 🏃‍♂️ Running the Application
 
@@ -136,7 +150,7 @@ This will create a default admin user:
 
 3. **Access the Application**:
    - Open `http://localhost:5173` in your browser
-   - Login with the admin credentials created above
+   - Login with the admin credentials you set in the environment variables
 
 ### Production Mode
 
@@ -156,7 +170,7 @@ This will create a default admin user:
 
 ### Authentication
 1. Navigate to the login page
-2. Enter your username and password
+2. Enter your username and password (admin credentials from environment variables)
 3. Upon successful login, you'll be redirected to the dashboard
 
 ### Dashboard
@@ -259,6 +273,7 @@ MERN-Reverse-Proxy-Logging-System/
 │   │   ├── models/        # MongoDB models
 │   │   ├── routes/        # API routes
 │   │   ├── services/      # Business logic
+│   │   ├── scripts/       # Setup and utility scripts
 │   │   └── utils/         # Utility functions
 │   └── package.json
 └── README.md
@@ -282,8 +297,12 @@ Make sure to set the following environment variables in production:
 NODE_ENV=production
 PORT=5000
 MONGODB_URI=your-production-mongodb-uri
+MONGO_URI=your-production-mongodb-uri
 JWT_SECRET=your-production-jwt-secret
 CLIENT_URL=your-production-client-url
+ADMIN_PASSWORD=your-secure-production-admin-password
+ADMIN_USERNAME=admin
+ADMIN_EMAIL=admin@yourdomain.com
 ```
 
 ### Docker Deployment

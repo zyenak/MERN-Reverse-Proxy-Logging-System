@@ -1,8 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import { validateRequest } from '@/middleware/validation';
-import { z } from 'zod';
+import { validateLogin, validateCreateUser, validateCreateProxyRule } from '@/middleware/validation';
 
-describe('validateRequest middleware', () => {
+describe('Validation Middleware', () => {
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
   let mockNext: NextFunction;
@@ -19,80 +18,137 @@ describe('validateRequest middleware', () => {
     mockNext = jest.fn();
   });
 
-  it('should call next() when validation passes', async () => {
-    const schema = z.object({
-      name: z.string(),
-      age: z.number(),
+  describe('validateLogin', () => {
+    it('should call next() when validation passes', async () => {
+      mockRequest.body = { 
+        email: 'test@example.com', 
+        password: 'password123' 
+      };
+
+      await validateLogin(mockRequest as Request, mockResponse as Response, mockNext);
+
+      expect(mockNext).toHaveBeenCalled();
+      expect(mockResponse.status).not.toHaveBeenCalled();
     });
 
-    mockRequest.body = { name: 'John', age: 30 };
+    it('should return 400 error when email is invalid', async () => {
+      mockRequest.body = { 
+        email: 'invalid-email', 
+        password: 'password123' 
+      };
 
-    const middleware = validateRequest(schema);
-    await middleware(mockRequest as Request, mockResponse as Response, mockNext);
+      await validateLogin(mockRequest as Request, mockResponse as Response, mockNext);
 
-    expect(mockNext).toHaveBeenCalled();
-    expect(mockResponse.status).not.toHaveBeenCalled();
-  });
-
-  it('should return 400 error when validation fails', async () => {
-    const schema = z.object({
-      name: z.string(),
-      age: z.number(),
+      expect(mockNext).not.toHaveBeenCalled();
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'Invalid input data.',
+        errors: expect.arrayContaining([
+          expect.objectContaining({ field: 'email' })
+        ])
+      });
     });
 
-    mockRequest.body = { name: 'John', age: 'invalid' };
+    it('should return 400 error when password is missing', async () => {
+      mockRequest.body = { 
+        email: 'test@example.com' 
+      };
 
-    const middleware = validateRequest(schema);
-    await middleware(mockRequest as Request, mockResponse as Response, mockNext);
+      await validateLogin(mockRequest as Request, mockResponse as Response, mockNext);
 
-    expect(mockNext).not.toHaveBeenCalled();
-    expect(mockResponse.status).toHaveBeenCalledWith(400);
-    expect(mockResponse.json).toHaveBeenCalledWith({
-      message: 'Validation failed',
-      errors: expect.arrayContaining([
-        expect.objectContaining({
-          field: 'age',
-          message: expect.any(String),
-        }),
-      ]),
-    });
-  });
-
-  it('should handle multiple validation errors', async () => {
-    const schema = z.object({
-      name: z.string().min(3),
-      email: z.string().email(),
-    });
-
-    mockRequest.body = { name: 'ab', email: 'invalid-email' };
-
-    const middleware = validateRequest(schema);
-    await middleware(mockRequest as Request, mockResponse as Response, mockNext);
-
-    expect(mockResponse.status).toHaveBeenCalledWith(400);
-    expect(mockResponse.json).toHaveBeenCalledWith({
-      message: 'Validation failed',
-      errors: expect.arrayContaining([
-        expect.objectContaining({ field: 'name' }),
-        expect.objectContaining({ field: 'email' }),
-      ]),
+      expect(mockNext).not.toHaveBeenCalled();
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'Invalid input data.',
+        errors: expect.arrayContaining([
+          expect.objectContaining({ field: 'password' })
+        ])
+      });
     });
   });
 
-  it('should handle non-Zod errors', async () => {
-    const schema = z.object({
-      name: z.string(),
+  describe('validateCreateUser', () => {
+    it('should call next() when validation passes', async () => {
+      mockRequest.body = { 
+        email: 'test@example.com', 
+        password: 'password123',
+        role: 'user'
+      };
+
+      await validateCreateUser(mockRequest as Request, mockResponse as Response, mockNext);
+
+      expect(mockNext).toHaveBeenCalled();
+      expect(mockResponse.status).not.toHaveBeenCalled();
     });
 
-    // Mock a non-Zod error
-    jest.spyOn(schema, 'parseAsync').mockRejectedValue(new Error('Unexpected error'));
+    it('should return 400 error when role is invalid', async () => {
+      mockRequest.body = { 
+        email: 'test@example.com', 
+        password: 'password123',
+        role: 'invalid-role'
+      };
 
-    const middleware = validateRequest(schema);
-    await middleware(mockRequest as Request, mockResponse as Response, mockNext);
+      await validateCreateUser(mockRequest as Request, mockResponse as Response, mockNext);
 
-    expect(mockResponse.status).toHaveBeenCalledWith(500);
-    expect(mockResponse.json).toHaveBeenCalledWith({
-      message: 'Internal server error during validation',
+      expect(mockNext).not.toHaveBeenCalled();
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'Invalid input data.',
+        errors: expect.arrayContaining([
+          expect.objectContaining({ field: 'role' })
+        ])
+      });
+    });
+  });
+
+  describe('validateCreateProxyRule', () => {
+    it('should call next() when validation passes', async () => {
+      mockRequest.body = { 
+        name: 'Test Rule',
+        pattern: '/api/test',
+        isBlocking: false
+      };
+
+      await validateCreateProxyRule(mockRequest as Request, mockResponse as Response, mockNext);
+
+      expect(mockNext).toHaveBeenCalled();
+      expect(mockResponse.status).not.toHaveBeenCalled();
+    });
+
+    it('should call next() when validation passes with forwardTarget', async () => {
+      mockRequest.body = { 
+        name: 'Test Rule',
+        pattern: '/api/test',
+        forwardTarget: 'https://api.example.com',
+        isBlocking: false
+      };
+
+      await validateCreateProxyRule(mockRequest as Request, mockResponse as Response, mockNext);
+
+      expect(mockNext).toHaveBeenCalled();
+      expect(mockResponse.status).not.toHaveBeenCalled();
+    });
+
+    it('should return 400 error when name is missing', async () => {
+      mockRequest.body = { 
+        pattern: '/api/test',
+        isBlocking: false
+      };
+
+      await validateCreateProxyRule(mockRequest as Request, mockResponse as Response, mockNext);
+
+      expect(mockNext).not.toHaveBeenCalled();
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'Invalid input data.',
+        errors: expect.arrayContaining([
+          expect.objectContaining({ field: 'name' })
+        ])
+      });
     });
   });
 }); 

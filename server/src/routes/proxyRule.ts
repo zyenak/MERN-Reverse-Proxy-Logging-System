@@ -8,8 +8,7 @@ import {
   resetProxyRules 
 } from '@/controllers/proxyRuleController';
 import { authenticate, requireRole } from '@/middleware/auth';
-import { validateRequest } from '@/middleware/validation';
-import { createProxyRuleSchema, updateProxyRuleSchema } from '@/utils/validation';
+import { validateCreateProxyRule, validateUpdateProxyRule } from '@/middleware/validation';
 import asyncHandler from '@/utils/asyncHandler';
 
 const router = Router();
@@ -24,7 +23,7 @@ router.get('/:id', authenticate as RequestHandler, requireRole(['admin']) as Req
 router.post('/', 
   authenticate as RequestHandler, 
   requireRole(['admin']) as RequestHandler,
-  validateRequest(createProxyRuleSchema), 
+  validateCreateProxyRule, 
   asyncHandler(createProxyRule)
 );
 
@@ -32,7 +31,7 @@ router.post('/',
 router.put('/:id', 
   authenticate as RequestHandler, 
   requireRole(['admin']) as RequestHandler,
-  validateRequest(updateProxyRuleSchema), 
+  validateUpdateProxyRule, 
   asyncHandler(updateProxyRule)
 );
 

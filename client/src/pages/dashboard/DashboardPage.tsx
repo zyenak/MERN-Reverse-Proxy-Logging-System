@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import apiClient from '@/services/apiClient';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 interface DashboardStats {
   totalRequests: number;
@@ -206,7 +207,8 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <div className="@container/main flex flex-1 flex-col gap-2">
+      <ErrorBoundary>
+        <div className="@container/main flex flex-1 flex-col gap-2">
         <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
           <Button onClick={refreshData} variant="outline" className="self-end">
             <RefreshCw className="h-4 w-4 mr-2" />
@@ -430,7 +432,8 @@ export default function DashboardPage() {
             </TabsContent>
           </Tabs>
         </div>
-      </div>
+        </div>
+      </ErrorBoundary>
     </div>
   );
 } 

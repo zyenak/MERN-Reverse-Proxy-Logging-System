@@ -11,6 +11,7 @@ import ProxyRulesPage from '@/pages/proxy-rules/ProxyRulesPage';
 import UsersPage from '@/pages/users/UsersPage';
 import SettingsPage from '@/pages/settings/SettingsPage';
 import UserDashboardPage from '@/pages/dashboard/UserDashboardPage';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 // Admin Route Wrapper Component
 const AdminRouteWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -71,9 +72,11 @@ const AppRoutes: React.FC = () => {
       <Route 
         path="/" 
         element={
-          <PublicRoute>
-            <LoginPage />
-          </PublicRoute>
+          <ErrorBoundary>
+            <PublicRoute>
+              <LoginPage />
+            </PublicRoute>
+          </ErrorBoundary>
         } 
       />
       
@@ -82,11 +85,17 @@ const AppRoutes: React.FC = () => {
         path="/dashboard"
         element={
           <ProtectedRoute>
-            <MainLayout />
+            <ErrorBoundary>
+              <MainLayout />
+            </ErrorBoundary>
           </ProtectedRoute>
         }
       >
-        <Route index element={isAdmin ? <DashboardPage /> : <UserDashboardPage />} />
+        <Route index element={
+          <ErrorBoundary>
+            {isAdmin ? <DashboardPage /> : <UserDashboardPage />}
+          </ErrorBoundary>
+        } />
       </Route>
 
       {/* Admin-only routes */}
@@ -95,12 +104,18 @@ const AppRoutes: React.FC = () => {
         element={
           <ProtectedRoute>
             <AdminRouteWrapper>
-              <MainLayout />
+              <ErrorBoundary>
+                <MainLayout />
+              </ErrorBoundary>
             </AdminRouteWrapper>
           </ProtectedRoute>
         }
       >
-        <Route index element={<LogsPage />} />
+        <Route index element={
+          <ErrorBoundary>
+            <LogsPage />
+          </ErrorBoundary>
+        } />
       </Route>
 
       <Route
@@ -108,12 +123,18 @@ const AppRoutes: React.FC = () => {
         element={
           <ProtectedRoute>
             <AdminRouteWrapper>
-              <MainLayout />
+              <ErrorBoundary>
+                <MainLayout />
+              </ErrorBoundary>
             </AdminRouteWrapper>
           </ProtectedRoute>
         }
       >
-        <Route index element={<SettingsPage />} />
+        <Route index element={
+          <ErrorBoundary>
+            <SettingsPage />
+          </ErrorBoundary>
+        } />
       </Route>
 
       <Route
@@ -121,12 +142,18 @@ const AppRoutes: React.FC = () => {
         element={
           <ProtectedRoute>
             <AdminRouteWrapper>
-              <MainLayout />
+              <ErrorBoundary>
+                <MainLayout />
+              </ErrorBoundary>
             </AdminRouteWrapper>
           </ProtectedRoute>
         }
       >
-        <Route index element={<ProxyRulesPage />} />
+        <Route index element={
+          <ErrorBoundary>
+            <ProxyRulesPage />
+          </ErrorBoundary>
+        } />
       </Route>
 
       <Route
@@ -134,12 +161,18 @@ const AppRoutes: React.FC = () => {
         element={
           <ProtectedRoute>
             <AdminRouteWrapper>
-              <MainLayout />
+              <ErrorBoundary>
+                <MainLayout />
+              </ErrorBoundary>
             </AdminRouteWrapper>
           </ProtectedRoute>
         }
       >
-        <Route index element={<UsersPage />} />
+        <Route index element={
+          <ErrorBoundary>
+            <UsersPage />
+          </ErrorBoundary>
+        } />
       </Route>
 
       {/* Catch all route */}
@@ -150,16 +183,18 @@ const AppRoutes: React.FC = () => {
 
 const App: React.FC = () => {
   return (
-    <Router>
-      <AuthProvider>
-        <AppRoutes />
-        <Toaster 
-          position="top-right"
-          richColors
-          closeButton
-        />
-      </AuthProvider>
-    </Router>
+    <ErrorBoundary>
+      <Router>
+        <AuthProvider>
+          <AppRoutes />
+          <Toaster 
+            position="top-right"
+            richColors
+            closeButton
+          />
+        </AuthProvider>
+      </Router>
+    </ErrorBoundary>
   );
 };
 

@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import proxyRuleService from '@/services/proxyRuleService';
 import logger from '@/utils/logger';
-import { CreateProxyRuleInput, UpdateProxyRuleInput } from '@/utils/validation';
+import { CreateProxyRuleRequest, UpdateProxyRuleRequest } from '@/types';
 
 export const getAllProxyRules = async (req: Request, res: Response) => {
   try {
@@ -37,11 +37,11 @@ export const getProxyRuleById = async (req: Request, res: Response) => {
 
 export const createProxyRule = async (req: Request, res: Response) => {
   try {
-    const ruleData: CreateProxyRuleInput = req.body;
+    const ruleData: CreateProxyRuleRequest = req.body;
     
-    // Validate path format
-    if (!ruleData.path.startsWith('/')) {
-      return res.status(400).json({ message: 'Path must start with /' });
+    // Validate pattern format
+    if (!ruleData.pattern.startsWith('/')) {
+      return res.status(400).json({ message: 'Pattern must start with /' });
     }
     
     const rule = await proxyRuleService.createRule(ruleData);
@@ -56,7 +56,7 @@ export const createProxyRule = async (req: Request, res: Response) => {
 export const updateProxyRule = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const updates: UpdateProxyRuleInput = req.body;
+    const updates: UpdateProxyRuleRequest = req.body;
     const rule = await proxyRuleService.updateRule(id, updates);
     
     if (!rule) {

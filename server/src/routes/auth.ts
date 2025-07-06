@@ -1,12 +1,11 @@
 import { Router } from 'express';
 import { register, login } from '@/controllers/authController';
-import { validateRequest } from '@/middleware/validation';
-import { loginSchema, createUserSchema } from '@/utils/validation';
+import { validateLogin, validateRegister } from '@/middleware/validation';
 import asyncHandler from '@/utils/asyncHandler';
 
 const router = Router();
 
-// router.post('/register', validateRequest(createUserSchema), asyncHandler(register)); // Removed registration
-router.post('/login', validateRequest(loginSchema), asyncHandler(login));
+// router.post('/register', validateRegister, asyncHandler(register)); // Removed registration
+router.post('/login', validateLogin, asyncHandler(login));
 
 export default router; 

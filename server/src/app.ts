@@ -21,15 +21,6 @@ import logger from '@/utils/logger';
 
 dotenv.config();
 
-// Debug: Check environment loading
-console.log('=== ENVIRONMENT DEBUG ===');
-console.log('NODE_ENV:', process.env.NODE_ENV);
-console.log('JWT_SECRET exists:', !!process.env.JWT_SECRET);
-console.log('MONGODB_URI exists:', !!process.env.MONGODB_URI);
-console.log('CLIENT_URL:', process.env.CLIENT_URL);
-console.log('PORT:', process.env.PORT);
-console.log('=== END ENVIRONMENT DEBUG ===');
-
 const app = express();
 
 // Security middleware

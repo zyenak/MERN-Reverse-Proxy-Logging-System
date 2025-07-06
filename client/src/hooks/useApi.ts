@@ -1,218 +1,203 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
+import apiClient from '@/services/apiClient';
+import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '@/constants';
+import { getErrorMessage } from '@/utils';
 
 interface UseApiOptions<T> {
-  url?: string;
-  method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
-  body?: any;
-  headers?: Record<string, string>;
-  immediate?: boolean;
   onSuccess?: (data: T) => void;
-  onError?: (error: any) => void;
+  onError?: (error: Error) => void;
   showToast?: boolean;
-  cacheKey?: string;
-  cacheTime?: number; // in milliseconds
+  successMessage?: string;
+  errorMessage?: string;
+  retryAttempts?: number;
 }
 
 interface UseApiState<T> {
   data: T | null;
   loading: boolean;
-  error: string | null;
-  isSuccess: boolean;
+  error: Error | null;
 }
 
 interface UseApiReturn<T> extends UseApiState<T> {
-  execute: (options?: Partial<UseApiOptions<T>>) => Promise<T | null>;
+  execute: (...args: any[]) => Promise<T | null>;
   reset: () => void;
-  refetch: () => Promise<T | null>;
+  setData: (data: T) => void;
 }
 
-// Simple in-memory cache
-const cache = new Map<string, { data: any; timestamp: number }>();
-
-const useApi = <T = any>(options: UseApiOptions<T> = {}): UseApiReturn<T> => {
+export function useApi<T = any>(
+  apiCall: (...args: any[]) => Promise<T>,
+  options: UseApiOptions<T> = {}
+): UseApiReturn<T> {
   const {
-    url,
-    method = 'GET',
-    body,
-    headers = {},
-    immediate = false,
     onSuccess,
     onError,
     showToast = true,
-    cacheKey,
-    cacheTime = 5 * 60 * 1000, // 5 minutes default
+    successMessage,
+    errorMessage,
+    retryAttempts,
   } = options;
 
   const [state, setState] = useState<UseApiState<T>>({
     data: null,
     loading: false,
     error: null,
-    isSuccess: false,
   });
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const execute = useCallback(
-    async (executeOptions?: Partial<UseApiOptions<T>>): Promise<T | null> => {
-      const finalOptions = { ...options, ...executeOptions };
-      const finalUrl = finalOptions.url || url;
-      const finalMethod = finalOptions.method || method;
-      const finalBody = finalOptions.body || body;
-      const finalHeaders = { ...headers, ...finalOptions.headers };
-      const finalCacheKey = finalOptions.cacheKey || cacheKey;
-
-      if (!finalUrl) {
-        const error = 'URL is required for API call';
-        setState(prev => ({ ...prev, error, loading: false }));
-        if (showToast) toast.error(error);
-        return null;
-      }
-
-      // Check cache for GET requests
-      if (finalMethod === 'GET' && finalCacheKey) {
-        const cached = cache.get(finalCacheKey);
-        if (cached && Date.now() - cached.timestamp < cacheTime) {
-          setState({
-            data: cached.data,
-            loading: false,
-            error: null,
-            isSuccess: true,
-          });
-          return cached.data;
-        }
-      }
-
-      // Abort previous request if still pending
+    async (...args: any[]): Promise<T | null> => {
+      // Cancel previous request if still pending
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
 
-      abortControllerRef.current = new AbortController();
+      // Create new abort controller
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
 
-      setState(prev => ({ ...prev, loading: true, error: null, isSuccess: false }));
+      setState(prev => ({ ...prev, loading: true, error: null }));
 
       try {
-        const token = localStorage.getItem('token');
-        const requestHeaders: Record<string, string> = {
-          'Content-Type': 'application/json',
-          ...finalHeaders,
-        };
+        let result: T;
 
-        if (token) {
-          requestHeaders.Authorization = `Bearer ${token}`;
+        if (retryAttempts && retryAttempts > 1) {
+          result = await apiClient.retryRequest(
+            () => apiCall(...args),
+            retryAttempts
+          );
+        } else {
+          result = await apiCall(...args);
         }
 
-        const requestOptions: RequestInit = {
-          method: finalMethod,
-          headers: requestHeaders,
-          signal: abortControllerRef.current.signal,
-        };
+        setState({ data: result, loading: false, error: null });
 
-        if (finalBody && finalMethod !== 'GET') {
-          requestOptions.body = JSON.stringify(finalBody);
+        if (onSuccess) {
+          onSuccess(result);
         }
 
-        const response = await fetch(finalUrl, requestOptions);
+        if (showToast && successMessage) {
+          toast.success(successMessage);
+        }
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          const errorMessage = errorData.message || `HTTP ${response.status}: ${response.statusText}`;
-          
-          setState(prev => ({
-            ...prev,
-            loading: false,
-            error: errorMessage,
-            isSuccess: false,
-          }));
-
-          if (showToast) toast.error(errorMessage);
-          finalOptions.onError?.(errorMessage);
+        return result;
+      } catch (error) {
+        // Don't update state if request was cancelled
+        if ((error as any)?.name === 'AbortError') {
           return null;
         }
 
-        const data = await response.json();
-
-        // Cache successful GET requests
-        if (finalMethod === 'GET' && finalCacheKey) {
-          cache.set(finalCacheKey, {
-            data,
-            timestamp: Date.now(),
-          });
-        }
-
-        setState({
-          data,
-          loading: false,
-          error: null,
-          isSuccess: true,
-        });
-
-        if (showToast && finalMethod !== 'GET') {
-          toast.success('Operation completed successfully');
-        }
-
-        finalOptions.onSuccess?.(data);
-        return data;
-      } catch (error: any) {
-        if (error.name === 'AbortError') {
-          return null; // Request was aborted
-        }
-
-        const errorMessage = error.message || 'An unexpected error occurred';
+        const apiError = error as Error;
         
-        setState(prev => ({
-          ...prev,
-          loading: false,
-          error: errorMessage,
-          isSuccess: false,
-        }));
+        // Handle network errors more gracefully
+        if (!(error as any)?.response) {
+          console.warn('Network error detected - this might be due to server not being ready');
+          // Don't show toast for network errors on initial load
+          if (showToast && state.data !== null) {
+            toast.error('Network error. Please check your connection.');
+          }
+        } else {
+          if (onError) {
+            onError(apiError);
+          }
 
-        if (showToast) toast.error(errorMessage);
-        finalOptions.onError?.(error);
+          if (showToast) {
+            const message = errorMessage || apiError.message || ERROR_MESSAGES.DEFAULT;
+            toast.error(message);
+          }
+        }
+
+        setState(prev => ({ ...prev, loading: false, error: apiError }));
         return null;
       } finally {
         abortControllerRef.current = null;
       }
     },
-    [url, method, body, headers, onSuccess, onError, showToast, cacheKey, cacheTime]
+    [apiCall, onSuccess, onError, showToast, successMessage, errorMessage, retryAttempts]
   );
 
   const reset = useCallback(() => {
-    setState({
-      data: null,
-      loading: false,
-      error: null,
-      isSuccess: false,
-    });
+    setState({ data: null, loading: false, error: null });
   }, []);
 
-  const refetch = useCallback(() => {
-    return execute();
-  }, [execute]);
-
-  // Execute immediately if requested
-  useEffect(() => {
-    if (immediate && url) {
-      execute();
-    }
-  }, [immediate, url, execute]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-    };
+  const setData = useCallback((data: T) => {
+    setState(prev => ({ ...prev, data }));
   }, []);
 
   return {
     ...state,
     execute,
     reset,
-    refetch,
+    setData,
   };
-};
+}
 
-export default useApi; 
+// Specialized hooks for common operations
+export function useGet<T>(url: string, options?: UseApiOptions<T>) {
+  return useApi(() => apiClient.get<T>(url), options);
+}
+
+export function usePost<T>(url: string, options?: UseApiOptions<T>) {
+  return useApi((data?: any) => apiClient.post<T>(url, data), options);
+}
+
+export function usePut<T>(url: string, options?: UseApiOptions<T>) {
+  return useApi((data?: any) => apiClient.put<T>(url, data), options);
+}
+
+export function useDelete<T>(url: string, options?: UseApiOptions<T>) {
+  return useApi(() => apiClient.delete<T>(url), options);
+}
+
+// Hook for paginated data
+export function usePaginatedApi<T>(
+  apiCall: (params: any) => Promise<{ data: T[]; total: number }>,
+  initialParams: any = {}
+) {
+  const [params, setParams] = useState(initialParams);
+  const [data, setData] = useState<T[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetchData = useCallback(async (newParams?: any) => {
+    const finalParams = { ...params, ...newParams };
+    setLoading(true);
+    setError(null);
+
+    try {
+      const result = await apiCall(finalParams);
+      setData(result.data);
+      setTotal(result.total);
+      setParams(finalParams);
+    } catch (err) {
+      setError(err as Error);
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  }, [apiCall, params]);
+
+  const updateParams = useCallback((newParams: any) => {
+    setParams((prev: any) => ({ ...prev, ...newParams }));
+  }, []);
+
+  const reset = useCallback(() => {
+    setData([]);
+    setTotal(0);
+    setParams(initialParams);
+    setError(null);
+  }, [initialParams]);
+
+  return {
+    data,
+    total,
+    loading,
+    error,
+    params,
+    fetchData,
+    updateParams,
+    reset,
+  };
+} 

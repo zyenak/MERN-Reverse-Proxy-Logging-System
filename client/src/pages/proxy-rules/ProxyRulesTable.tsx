@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import apiClient from '@/services/apiClient';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 interface ProxyRule {
   _id: string;
@@ -89,11 +90,12 @@ export default function ProxyRulesTable({ search, isCreateDialogOpen, onCreateDi
         console.log('Using old format (array)');
         setRules(data);
         setTotal(data.length);
-      } else if (data && typeof data === 'object' && Array.isArray(data.rules)) {
+      } else if (data && typeof data === 'object' && 'rules' in data && Array.isArray((data as any).rules)) {
         // New format - object with rules and total
         console.log('Using new format (object with rules)');
-        setRules(data.rules);
-        setTotal(data.total || data.rules.length);
+        const responseData = data as { rules: ProxyRule[]; total?: number };
+        setRules(responseData.rules);
+        setTotal(responseData.total || responseData.rules.length);
       } else {
         // Unexpected format
         console.error('Unexpected API response format:', data);
@@ -103,7 +105,18 @@ export default function ProxyRulesTable({ search, isCreateDialogOpen, onCreateDi
     } catch (error: any) {
       if (error.name !== 'AbortError') {
         console.error('Error fetching proxy rules:', error);
-        toast.error('Failed to fetch proxy rules');
+        
+        // Handle network errors more gracefully
+        if (!error.response) {
+          console.warn('Network error detected - this might be due to server not being ready');
+          // Don't show toast for network errors on initial load if we have no data yet
+          if (rules.length > 0) {
+            toast.error('Network error. Please check your connection.');
+          }
+        } else {
+          toast.error('Failed to fetch proxy rules');
+        }
+        
         setRules([]);
         setTotal(0);
       }
@@ -117,9 +130,16 @@ export default function ProxyRulesTable({ search, isCreateDialogOpen, onCreateDi
   }, [search]);
 
   useEffect(() => {
-    fetchRules();
+    // Add a small delay for initial load to give server time to start
+    const timer = setTimeout(() => {
+      fetchRules();
+    }, 100);
+    
     // Cleanup on unmount
-    return () => abortRef.current?.abort();
+    return () => {
+      clearTimeout(timer);
+      abortRef.current?.abort();
+    };
     // eslint-disable-next-line
   }, [page, limit, search]);
 
@@ -460,7 +480,8 @@ export default function ProxyRulesTable({ search, isCreateDialogOpen, onCreateDi
       </Dialog>
 
       {/* Paginated Table */}
-      <PaginatedTable
+      <ErrorBoundary>
+        <PaginatedTable
         columns={[
           { 
             header: 'Status', 
@@ -515,6 +536,7 @@ export default function ProxyRulesTable({ search, isCreateDialogOpen, onCreateDi
         loading={loading}
         emptyMessage="No proxy rules found."
       />
+      </ErrorBoundary>
     </>
   );
 } 

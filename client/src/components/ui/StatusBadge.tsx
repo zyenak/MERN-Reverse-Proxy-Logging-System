@@ -1,7 +1,8 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, XCircle, AlertTriangle, Clock, Shield, ShieldOff } from 'lucide-react';
-import { cn, getStatusColor, getMethodColor } from '@/utils';
+import { cn } from '@/lib/utils';
+import { getStatusColor, getMethodColor } from '@/utils';
 import { STATUS_COLORS, METHOD_COLORS } from '@/constants';
 
 interface StatusBadgeProps {

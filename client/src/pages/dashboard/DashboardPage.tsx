@@ -98,9 +98,17 @@ export default function DashboardPage() {
     try {
       const data = await apiClient.get<UserData[]>('/proxy/users');
       setUsers(data);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching user data:', error);
-      setUsers([]);
+      
+      // Check if request was blocked by proxy rule
+      if (error.response?.status === 403 && error.response?.data?.blocked) {
+        toast.error('Request blocked by proxy rule');
+        setUsers([]);
+      } else {
+        toast.error('Failed to fetch user data from external API.');
+        setUsers([]);
+      }
     }
   };
 
@@ -150,9 +158,15 @@ export default function DashboardPage() {
       const data = await apiClient.post<UserData[]>('/proxy/users/simulate');
       setUsers(data);
       toast.success('External request simulated and logged!');
-    } catch (error) {
-      setUsers([]);
-      toast.error('Failed to fetch user data from external API.');
+    } catch (error: any) {
+      // Check if request was blocked by proxy rule
+      if (error.response?.status === 403 && error.response?.data?.blocked) {
+        toast.error('Request blocked by proxy rule');
+        setUsers([]);
+      } else {
+        toast.error('Failed to fetch user data from external API.');
+        setUsers([]);
+      }
     } finally {
       setUsersLoading(false);
     }

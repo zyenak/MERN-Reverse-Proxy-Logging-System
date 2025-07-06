@@ -7,7 +7,7 @@ export const createProxyRuleSchema = z.object({
   methods: z.array(z.enum(['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'])).min(1),
   loggingEnabled: z.boolean().default(true),
   isBlocked: z.boolean().default(false),
-  forwardTarget: z.string().url().optional(),
+  forwardTarget: z.string().url().optional().or(z.literal('')),
   priority: z.number().int().min(0).max(1000).default(0),
   enabled: z.boolean().default(true),
 });
@@ -18,7 +18,7 @@ export const updateProxyRuleSchema = z.object({
   methods: z.array(z.enum(['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'])).min(1).optional(),
   loggingEnabled: z.boolean().optional(),
   isBlocked: z.boolean().optional(),
-  forwardTarget: z.string().url().optional(),
+  forwardTarget: z.string().url().optional().or(z.literal('')),
   priority: z.number().int().min(0).max(1000).optional(),
   enabled: z.boolean().optional(),
 });

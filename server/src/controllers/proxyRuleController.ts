@@ -3,11 +3,15 @@ import proxyRuleService from '@/services/proxyRuleService';
 import logger from '@/utils/logger';
 import { CreateProxyRuleInput, UpdateProxyRuleInput } from '@/utils/validation';
 
-export const getAllProxyRules = async (_req: Request, res: Response) => {
+export const getAllProxyRules = async (req: Request, res: Response) => {
   try {
-    const rules = await proxyRuleService.getAllRules();
-    logger.info('All proxy rules fetched successfully');
-    res.json(rules);
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const search = req.query.search as string;
+    
+    const result = await proxyRuleService.getAllRulesPaginated(page, limit, search);
+    logger.info('All proxy rules fetched successfully', { page, limit, total: result.total });
+    res.json(result);
   } catch (error) {
     logger.error('Error fetching proxy rules:', error);
     res.status(500).json({ message: 'Error fetching proxy rules', error });

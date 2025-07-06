@@ -25,26 +25,35 @@ export const handleProxy = async (req: AuthRequest, res: Response): Promise<void
   const targetUrl = `${TARGET_API}${actualPath}`;
   
   try {
-    // Check if request should be blocked
-    const shouldBlock = await proxyRuleService.shouldBlockRequest(originalUrl, method);
+    // Check if request should be blocked FIRST (before any processing)
+    // Use actualPath for rule matching since rules are configured with API paths, not proxy URLs
+    const shouldBlock = await proxyRuleService.shouldBlockRequest(actualPath, method);
     
     if (shouldBlock) {
+      const responseTime = Date.now() - startTime;
+      
       logger.warn('Request blocked by proxy rule', {
         url: originalUrl,
+        actualPath,
         method,
-        user: req.user?.username
+        user: req.user?.username,
+        responseTime
       });
       
+      // Return blocked response immediately
       res.status(403).json({ 
         message: 'Request blocked by proxy rule',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        blocked: true
       });
       return;
     }
 
-    // Find matching rule for logging
-    const matchingRule = await proxyRuleService.findMatchingRule(originalUrl, method);
-    const shouldLog = await proxyRuleService.shouldLogRequest(originalUrl, method);
+    // Check if request should be logged
+    const shouldLog = await proxyRuleService.shouldLogRequest(actualPath, method);
+    
+    // Find matching rule for logging (only if logging is enabled)
+    const matchingRule = shouldLog ? await proxyRuleService.findMatchingRule(actualPath, method) : null;
 
     // Prepare headers for forwarding
     const headers = { ...req.headers };
@@ -63,7 +72,7 @@ export const handleProxy = async (req: AuthRequest, res: Response): Promise<void
 
     const responseTime = Date.now() - startTime;
 
-    // Log the request if enabled
+    // Log the request ONLY if logging is enabled
     if (shouldLog) {
       try {
         await Log.create({
@@ -111,7 +120,8 @@ export const handleProxy = async (req: AuthRequest, res: Response): Promise<void
       method,
       status: response.status,
       responseTime,
-      user: req.user?.username
+      user: req.user?.username,
+      logged: shouldLog
     });
 
   } catch (error) {
@@ -125,25 +135,28 @@ export const handleProxy = async (req: AuthRequest, res: Response): Promise<void
       user: req.user?.username
     });
 
-    // Log the failed request
-    try {
-      await Log.create({
-        method,
-        url: originalUrl,
-        timestamp: new Date(),
-        status: 500,
-        user: req.user?.username,
-        requestedBy: req.user?.id || req.user?._id || req.user?.username,
-        responseTime,
-        isProxied: true,
-        targetUrl,
-        meta: {
-          error: error instanceof Error ? error.message : 'Unknown error',
-          targetApi: TARGET_API
-        }
-      });
-    } catch (logError) {
-      logger.error('Error logging failed proxy request:', logError);
+    // Only log failed requests if logging is enabled
+    const shouldLog = await proxyRuleService.shouldLogRequest(actualPath, method);
+    if (shouldLog) {
+      try {
+        await Log.create({
+          method,
+          url: originalUrl,
+          timestamp: new Date(),
+          status: 500,
+          user: req.user?.username,
+          requestedBy: req.user?.id || req.user?._id || req.user?.username,
+          responseTime,
+          isProxied: true,
+          targetUrl,
+          meta: {
+            error: error instanceof Error ? error.message : 'Unknown error',
+            targetApi: TARGET_API
+          }
+        });
+      } catch (logError) {
+        logger.error('Error logging failed proxy request:', logError);
+      }
     }
 
     res.status(500).json({ 
@@ -158,32 +171,63 @@ export const simulateExternalUserRequest = async (req: AuthRequest, res: Respons
   const startTime = Date.now();
   const originalUrl = req.originalUrl;
   const method = 'GET';
-  const targetUrl = `${TARGET_API}/users`;
+  const actualPath = '/users'; // This is the actual API path being requested
+  const targetUrl = `${TARGET_API}${actualPath}`;
+  
   try {
+    // Check if request should be blocked FIRST
+    const shouldBlock = await proxyRuleService.shouldBlockRequest(actualPath, method);
+    
+    if (shouldBlock) {
+      const responseTime = Date.now() - startTime;
+      
+      logger.warn('Simulated request blocked by proxy rule', {
+        url: originalUrl,
+        actualPath,
+        method,
+        user: req.user?.username,
+        responseTime
+      });
+      
+      res.status(403).json({ 
+        message: 'Request blocked by proxy rule',
+        timestamp: new Date().toISOString(),
+        blocked: true
+      });
+      return;
+    }
+
+    // Check if request should be logged
+    const shouldLog = await proxyRuleService.shouldLogRequest(actualPath, method);
+    
     const response = await axios.get(targetUrl, { timeout: 30000 });
     const responseTime = Date.now() - startTime;
-    // Log the request
-    try {
-      await Log.create({
-        method,
-        url: originalUrl,
-        timestamp: new Date(),
-        status: response.status,
-        user: req.user?.username,
-        requestedBy: req.user?.id || req.user?._id || req.user?.username,
-        responseTime,
-        targetUrl,
-        isProxied: true,
-        meta: {
-          targetApi: TARGET_API,
-          userAgent: req.headers['user-agent'],
-          ip: req.ip,
-          simulation: true
-        }
-      });
-    } catch (logError) {
-      logger.error('Error logging simulated proxy request:', logError);
+    
+    // Log the request ONLY if logging is enabled
+    if (shouldLog) {
+      try {
+        await Log.create({
+          method,
+          url: originalUrl,
+          timestamp: new Date(),
+          status: response.status,
+          user: req.user?.username,
+          requestedBy: req.user?.id || req.user?._id || req.user?.username,
+          responseTime,
+          targetUrl,
+          isProxied: true,
+          meta: {
+            targetApi: TARGET_API,
+            userAgent: req.headers['user-agent'],
+            ip: req.ip,
+            simulation: true
+          }
+        });
+      } catch (logError) {
+        logger.error('Error logging simulated proxy request:', logError);
+      }
     }
+    
     res.status(response.status).json(response.data);
   } catch (error) {
     const responseTime = Date.now() - startTime;
@@ -194,7 +238,36 @@ export const simulateExternalUserRequest = async (req: AuthRequest, res: Respons
       responseTime,
       user: req.user?.username
     });
-    res.status(500).json({ message: 'Simulated proxy request failed', error: error instanceof Error ? error.message : 'Unknown error' });
+    
+    // Only log failed requests if logging is enabled
+    const shouldLog = await proxyRuleService.shouldLogRequest(originalUrl, method);
+    if (shouldLog) {
+      try {
+        await Log.create({
+          method,
+          url: originalUrl,
+          timestamp: new Date(),
+          status: 500,
+          user: req.user?.username,
+          requestedBy: req.user?.id || req.user?._id || req.user?.username,
+          responseTime,
+          isProxied: true,
+          targetUrl,
+          meta: {
+            error: error instanceof Error ? error.message : 'Unknown error',
+            targetApi: TARGET_API,
+            simulation: true
+          }
+        });
+      } catch (logError) {
+        logger.error('Error logging failed simulated proxy request:', logError);
+      }
+    }
+    
+    res.status(500).json({ 
+      message: 'Simulated proxy request failed', 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    });
   }
 };
 

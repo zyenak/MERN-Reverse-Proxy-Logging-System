@@ -26,7 +26,7 @@ export class ProxyRuleService {
         return this.cachedRules;
       }
 
-      const rules = await ProxyRule.find({ enabled: true })
+      const rules = await ProxyRule.find()
         .sort({ priority: -1, createdAt: -1 })
         .exec();
 
@@ -34,6 +34,48 @@ export class ProxyRuleService {
       return rules;
     } catch (error) {
       logger.error('Error fetching proxy rules:', error);
+      throw error;
+    }
+  }
+
+  public async getEnabledRules(): Promise<IProxyRule[]> {
+    try {
+      const rules = await ProxyRule.find({ enabled: true })
+        .sort({ priority: -1, createdAt: -1 })
+        .exec();
+      return rules;
+    } catch (error) {
+      logger.error('Error fetching enabled proxy rules:', error);
+      throw error;
+    }
+  }
+
+  public async getAllRulesPaginated(page: number, limit: number, search?: string): Promise<{ rules: IProxyRule[], total: number }> {
+    try {
+      const skip = (page - 1) * limit;
+      
+      // Build query
+      const query: any = {};
+      if (search) {
+        query.$or = [
+          { name: { $regex: search, $options: 'i' } },
+          { path: { $regex: search, $options: 'i' } }
+        ];
+      }
+
+      // Get total count
+      const total = await ProxyRule.countDocuments(query);
+      
+      // Get paginated results
+      const rules = await ProxyRule.find(query)
+        .sort({ priority: -1, createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .exec();
+
+      return { rules, total };
+    } catch (error) {
+      logger.error('Error fetching paginated proxy rules:', error);
       throw error;
     }
   }
@@ -94,9 +136,9 @@ export class ProxyRuleService {
     }
   }
 
-  public async findMatchingRule(url: string, method: string): Promise<IProxyRule | null> {
+  public async findMatchingRule(url: string, method: string, enabledOnly: boolean = true): Promise<IProxyRule | null> {
     try {
-      const rules = await this.getAllRules();
+      const rules = enabledOnly ? await this.getEnabledRules() : await this.getAllRules();
       
       // Extract path from URL - handle both full URLs and paths
       let pathname: string;
@@ -130,7 +172,7 @@ export class ProxyRuleService {
 
   public async shouldBlockRequest(url: string, method: string): Promise<boolean> {
     try {
-      const matchingRule = await this.findMatchingRule(url, method);
+      const matchingRule = await this.findMatchingRule(url, method, true); // Only check enabled rules
       return matchingRule ? matchingRule.isBlocked : false;
     } catch (error) {
       logger.error('Error checking if request should be blocked:', error);
@@ -140,7 +182,7 @@ export class ProxyRuleService {
 
   public async shouldLogRequest(url: string, method: string): Promise<boolean> {
     try {
-      const matchingRule = await this.findMatchingRule(url, method);
+      const matchingRule = await this.findMatchingRule(url, method, true); // Only check enabled rules
       return matchingRule ? matchingRule.loggingEnabled : true; // Default to logging
     } catch (error) {
       logger.error('Error checking if request should be logged:', error);

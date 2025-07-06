@@ -162,7 +162,7 @@ export default function SettingsPage() {
           <Button onClick={resetSettings} variant="outline">
             Reset to Defaults
           </Button>
-          <Button onClick={saveSettings} disabled={saving}>
+          <Button onClick={saveSettings} disabled={true}>
             {saving ? (
               <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
             ) : (
